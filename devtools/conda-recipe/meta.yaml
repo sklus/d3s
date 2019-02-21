@@ -1,0 +1,36 @@
+package:
+  name: d3s
+  # version number: [base tag]+[commits-upstream]_[git_hash]
+  # eg. v2.0+0_g8824162
+  #version: {{ GIT_DESCRIBE_TAG[1:] + '+' + GIT_BUILD_STR}}
+  version: 0.1
+source:
+  path: ../..
+
+
+requirements:
+  build:
+    - numpy 1.9.*  # [not (win and (py35 or py36))]
+    - numpy 1.9.*  # [win and py35]
+    - numpy 1.11.*  # [win and py36]
+    - python
+    - scipy
+    - setuptools
+    - toolchain
+    - boost
+
+  run:
+    - numpy >=1.9,<1.14  # [not (win and (py35 or py36))]
+    - numpy >=1.9,<1.14  # [win and py35]
+    - numpy >=1.11,<1.14 # [win and py36]
+    - python
+    - setuptools
+    - boost
+test:
+  import:
+    - d3s
+
+about:
+  home: http://d3s-project.org
+  license: GNU Lesser Public License v3+
+  summary: blah
