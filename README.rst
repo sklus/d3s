@@ -1,10 +1,6 @@
-DSPy
-====
-...
+Data-driven dynamical systems toolbox.
 
-What is it?
------------
-...
+====
 
 Installation
 ------------
