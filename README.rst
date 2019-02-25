@@ -1,13 +1,22 @@
-Data-driven dynamical systems toolbox.
+Data-driven dynamical systems toolbox. Written by Stefan Klus
 
 ====
 
-Installation
-------------
+Conda Environment
+-----------------
+This conda environment handles boost dependencies for the user.
+::
 
-Set the environment variable "BOOST" to the directory containing the boost installation
-and invoke "python setup.py install" to install to your current python interpreter.
+    conda env create -f environment.yml
+    source activate d3s
 
-If you are a developer you can use "python setup.py develop" to build the extension and
-be able to import dspy wherever you currently are in your file system.
 
+Develop/Install
+---------------
+::
+
+    python setup.py install
+
+or::
+
+    python setup.py develop

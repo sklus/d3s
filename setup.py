@@ -3,24 +3,23 @@ from setuptools import setup, find_packages, Extension
 
 import os
 import sys
+import warnings
 
-boost = os.getenv('BOOST', False)
-
+boost = os.getenv("CONDA_PREFIX", '')
 if not boost:
-    print('please set env variable "BOOST"  to the location of your boost library')
-    sys.exit(1)
+    warnings.warn("Not in conda environment. Systems extension may not work correctly")
 
-if not os.path.exists(boost):
-    print('boost does not exist')
-    sys.exit(2)
-
+# create dspy directory. If this does not exist, doing "setup.py install develop" will fail to sym-link.
+dspy_folder_path = os.path.join(os.path.dirname(__file__), "dspy")
+if "develop" in sys.argv and not os.path.exists(dspy_folder_path):
+    os.mkdir(dspy_folder_path)
 
 e = Extension('dspy.systems',
               sources=['cpp/systems.cpp'],
               language='c++',
               extra_compile_args=['-c', '-O3', '-fPIC', '-D_UNIX', '-std=c++11', '-Wno-deprecated-declarations'],
               include_dirs=[boost, 'm'],
-              libraries=['boost_python', 'boost_numpy3'],
+              libraries=['boost_python', 'boost_numpy'],
               )
 
 

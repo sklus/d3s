@@ -1,11 +1,20 @@
-CC     = g++
-BOOST  = /srv/public/sklus/boost_1_65
-CFLAGS = -c -O3 -fPIC -D_UNIX -std=c++11 -Wno-deprecated-declarations -I$(BOOST)/include -I/storage/mi/sklus/miniconda3/include/python3.6m/
-LFLAGS = -O3 -shared $(BOOST)/lib/libboost_python3.so $(BOOST)/lib/libboost_numpy3.so -L/storage/mi/sklus/miniconda3/lib/ -lpython3.6m -lm
+CC = g++
+
+ENVROOT = $(CONDA_PREFIX)
+
+ifeq ($(ENVROOT),)
+$(error - You must activate Conda environment)
+endif
+
+INCDIR  = $(ENVROOT)/include
+LIBDIR = $(ENVROOT)/lib
+CFLAGS = -c -O3 -fPIC -D_UNIX -std=c++11 -Wno-deprecated-declarations -I$(INCDIR) -I$(INCDIR)/boost -I$(INCDIR)/python3.5m/
+
+LFLAGS = -O3 -shared $(LIBDIR)/libboost_python35.so $(LIBDIR)/libboost_system.so $(LIBDIR)/libpython3.5m.so $(LIBDIR)/libboost_numpy35.so -Wl,-rpath=$(ENVROOT)/lib
 
 systems: systems.cpp
 	$(CC) $(CFLAGS) $^
-	$(CC) $(LFLAGS) -Wl,-soname,$@.so -Wl,-rpath=$(BOOST)/lib -Wl,-rpath=/storage/mi/sklus/miniconda3/lib/ $@.o -o ../d3s/$@.so
+	$(CC) -Wl,-soname,$@.so -Wl,-rpath=$(LIBDIR) $@.o -o ../d3s/$@.so $(LFLAGS)
 
 .PHONY: clean
 
