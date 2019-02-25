@@ -15,8 +15,8 @@ Develop/Install
 ---------------
 ::
 
-    python setup.py install
+    python setup.py install [--user]
 
 or::
 
-    python setup.py develop
+    python setup.py develop [--user]
