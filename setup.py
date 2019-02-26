@@ -3,11 +3,10 @@ from setuptools import setup, find_packages, Extension
 
 import os
 import sys
-import warnings
 
-boost = os.path.join(os.getenv("CONDA_PREFIX", ''), 'include')
+boost = os.getenv("CONDA_PREFIX", '')
 if not boost:
-    warnings.warn("Not in conda environment. Systems extension may not work correctly")
+    print("\n\033[1;31m WARNING: Not in conda environment. Systems extension may not work correctly\033[0m\n")
 
 # create dspy directory. If this does not exist, doing "setup.py install develop" will fail to sym-link.
 dspy_folder_path = os.path.join(os.path.dirname(__file__), "dspy")
