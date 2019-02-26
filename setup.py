@@ -5,7 +5,7 @@ import os
 import sys
 import warnings
 
-boost = os.getenv("CONDA_PREFIX", '')
+boost = os.path.join(os.getenv("CONDA_PREFIX", ''), 'include')
 if not boost:
     warnings.warn("Not in conda environment. Systems extension may not work correctly")
 

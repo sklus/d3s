@@ -37,7 +37,6 @@ dependencies:
     - cycler==0.10.0
     - cython==0.29.5
     - decorator==4.3.2
-    - dspy==0.1
     - ipython==7.3.0
     - ipython-genutils==0.2.0
     - jedi==0.13.3
