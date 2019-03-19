@@ -21,16 +21,16 @@ sigma = scipy.sqrt(0.3)
 epsilon = 0.1
 k = kernels.gaussianKernel(sigma)
 
-evs = 4 #d number of eigenfunctions to be computed
+evs = 4 # number of eigenfunctions to be computed
 
 # Perron-Frobenius
-d, V = algorithms.kernelEdmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
+d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
 for i in range(evs):
     matplotlib.pyplot.figure()
     matplotlib.pyplot.scatter(X, V[:, i])
 
 # Koopman
-d, V = algorithms.kernelEdmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
+d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
 for i in range(evs):
     matplotlib.pyplot.figure()
     matplotlib.pyplot.scatter(X, V[:, i]/scipy.amax(abs(V[:, i])))
@@ -43,7 +43,7 @@ for s in data.keys():
 
 Omega = domain.discretization(bounds, boxes)
 
-evs = 4 #d number of eigenfunctions to be computed
+evs = 4 # number of eigenfunctions to be computed
 
 # define kernel and regularization parameter
 sigma = scipy.sqrt(2)
@@ -51,7 +51,7 @@ epsilon = 0
 k = kernels.gaussianKernel(sigma)
 
 # Perron-Frobenius
-d, V = algorithms.kernelEdmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
+d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
 for i in range(evs):
     matplotlib.pyplot.figure()
     Omega.plot(scipy.real(V[:, i]))
@@ -61,7 +61,7 @@ k.sigma = 0.5
 epsilon = 0.1
 
 # Koopman
-d, V = algorithms.kernelEdmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
+d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
 for i in range(evs):
     matplotlib.pyplot.figure()
     Omega.plot(scipy.real(V[:, i]))
@@ -79,7 +79,7 @@ Y = data[1:]
 k_s = kernels.stringKernel()
 k = lambda x, y : scipy.exp(-k_s(x, y)**2/0.4)
 
-d, V = algorithms.kernelEdmd(X, Y, k, epsilon=0.1, evs=4, operator='P')
+d, V = algorithms.kedmd(X, Y, k, epsilon=0.1, evs=4, operator='P')
 
 # normalize eigenfunctions
 for i in range(4):

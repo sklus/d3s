@@ -15,7 +15,7 @@ from .algorithms import (
     sindy,
     dmd,
     edmd,
-    kernelEdmd,
+    kedmd,
     ulam,
     tica,
 )

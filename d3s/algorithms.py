@@ -24,7 +24,7 @@ def dmd(X, Y, mode='exact'):
     '''
     Exact and standard DMD of the data matrices X and Y.
 
-    mode: 'exact' for exact DMD or 'standard' for standard DMD
+    :param mode: 'exact' for exact DMD or 'standard' for standard DMD
     '''
     U, s, Vt = _scipy.linalg.svd(X, full_matrices=False)
     S_inv = _scipy.diag(1/s)
@@ -109,7 +109,7 @@ def tica(X, Y, evs=5):
     '''
     Time-lagged independent component analysis of the data matrices X and Y.
 
-    evs: number of eigenvalues/eigenvectors
+    :param evs: number of eigenvalues/eigenvectors
     '''
     return edmd(X, Y, _observables.identity, evs=evs)
 
@@ -119,9 +119,9 @@ def ulam(X, Y, Omega, evs=5, operator='K'):
     Ulam's method for the Koopman or Perron-Frobenius operator. The matrices X and Y contain
     the input data.
 
-    Omega:    box discretization of type topy.domain.discretization
-    evs:      number of eigenvalues/eigenvectors
-    operator: 'K' for Koopman or 'P' for Perron-Frobenius
+    :param Omega:    box discretization of type topy.domain.discretization
+    :param evs:      number of eigenvalues/eigenvectors
+    :param operator: 'K' for Koopman or 'P' for Perron-Frobenius
 
     TODO: Switch to sparse matrices.
     '''
@@ -148,9 +148,9 @@ def edmd(X, Y, psi, evs=5, operator='K'):
     Conventional EDMD for the Koopman or Perron-Frobenius operator. The matrices X and Y
     contain the input data.
 
-    psi:      set of basis functions, see d3s.observables
-    evs:      number of eigenvalues/eigenvectors
-    operator: 'K' for Koopman or 'P' for Perron-Frobenius
+    :param psi:      set of basis functions, see d3s.observables
+    :param evs:      number of eigenvalues/eigenvectors
+    :param operator: 'K' for Koopman or 'P' for Perron-Frobenius
     '''
     PsiX = psi(X)
     PsiY = psi(Y)
@@ -163,15 +163,15 @@ def edmd(X, Y, psi, evs=5, operator='K'):
     return (d, V)
 
 
-def kernelEdmd(X, Y, k, epsilon=0, evs=5, operator='P'):
+def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     '''
     Kernel EDMD for the Koopman or Perron-Frobenius operator. The matrices X and Y
     contain the input data.
 
-    k:        kernel, see d3s.kernels
-    epsilon:  regularization parameter
-    evs:      number of eigenvalues/eigenvectors
-    operator: 'K' for Koopman or 'P' for Perron-Frobenius (note that the default is P here)
+    :param k:        kernel, see d3s.kernels
+    :param epsilon:  regularization parameter
+    :param evs:      number of eigenvalues/eigenvectors
+    :param operator: 'K' for Koopman or 'P' for Perron-Frobenius (note that the default is P here)
     '''
     if isinstance(X, list): # e.g., for strings
         n = len(X)
@@ -192,9 +192,9 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
     '''
     Sparse indentification of nonlinear dynamics for the data given by X and Y.
 
-    psi:        set of basis functions, see topy.observables
-    eps:        cutoff threshold
-    iterations: number of sparsification steps
+    :param psi:        set of basis functions, see topy.observables
+    :param eps:        cutoff threshold
+    :param iterations: number of sparsification steps
     '''
     PsiX = psi(X)
     Xi = Y @ _scipy.linalg.pinv(PsiX) # least-squares initial guess
@@ -207,13 +207,30 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
             Xi[ind, b] = Y[ind, :] @ _scipy.linalg.pinv(PsiX[b, :])
     return Xi
 
+def kpca(X, k, evs=5):
+    '''
+    Kernel PCA. Returns data projected onto principal components.
+    
+    :param X:    data matrix, each column represents a data point
+    :param k:    kernel
+    :param evs:  number of eigenvalues/eigenvectors
+    '''
+    G = _kernels.gramian(X, k) # Gram matrix
+    
+    n = X.shape[1]
+    N = _scipy.eye(n) - 1/n*_scipy.ones((n, n))
+    G = N @ G @ N # averaged Gram matrix
+    
+    d, V = sortEig(G, evs)
+    return (d, V)
+
 
 # auxiliary functions
 def sortEig(A, evs=5):
     '''
     Computes eigenvalues and eigenvectors of A and sorts them in decreasing lexicographic order.
 
-    evs: number of eigenvalues/eigenvectors
+    :param evs: number of eigenvalues/eigenvectors
     '''
     n = A.shape[0]
     if evs < n:
