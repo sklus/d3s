@@ -556,12 +556,11 @@ DoubleWell6D::DoubleWell6D(double h, size_t nSteps)
 
 void DoubleWell6D::f(Vector& x, Vector& y)
 {
-    // Double well potential
     y[0] = -4*x[0]*x[0]*x[0] + 4*x[0];
     y[1] = -2*x[1];
-    y[2] = -2*x[2];
+    y[2] = -8*x[2]*x[2]*x[2] + 8*x[2];
     y[3] = -2*x[3];
-    y[4] = -2*x[4];
+    y[4] = -6*x[4]*x[4]*x[4] + 6*x[4];
     y[5] = -2*x[5];
 }
 

@@ -127,6 +127,11 @@ class matmux(object):
         _sio.savemat(self.tmpFile, {'x':x, 'y':y, 'z':z})
         self._loadmat()
         self('surf(x, y, z);')
+        
+    def scatter3(self, x, y, z, c):
+        _sio.savemat(self.tmpFile, {'x':x, 'y':y, 'z':z, 'c':c})
+        self._loadmat()
+        self('scatter3(x, y, z, [], c);')
 
     def pcolor(self, x, y, z):
         _sio.savemat(self.tmpFile, {'x':x, 'y':y, 'z':z})
