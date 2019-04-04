@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import scipy
+import scipy as sp
 import scipy.io
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
+
 import d3s.algorithms as algorithms
+
+plt.ion()
 
 # load variables from mat file into main scope
 data = scipy.io.loadmat('data/vonKarman.mat', squeeze_me=True)
@@ -19,6 +22,6 @@ Y = x[:, 1:]
 d, V = algorithms.dmd(X, Y)
 
 for i in range(10):
-    matplotlib.pyplot.figure()
-    v = scipy.real(V[:, i].reshape(nx, ny))
-    matplotlib.pyplot.imshow(v)
+    plt.figure()
+    v = sp.real(V[:, i].reshape(nx, ny))
+    plt.imshow(v)

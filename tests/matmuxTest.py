@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import d3s.tools as tools
-import scipy
+import scipy as sp
 
 #%% create matmux object
 mat = tools.matmux() # Matlab must be started before via: $ tmux new -s matlab "matlab -nodesktop"
 
 #%% call plot function directly
-x = scipy.linspace(1, 5, 10)
-y = scipy.rand(len(x))
+x = sp.linspace(1, 5, 10)
+y = sp.rand(len(x))
 mat.plot(x, y)
 
 #%% export to Matlab
