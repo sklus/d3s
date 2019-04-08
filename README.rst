@@ -1,4 +1,12 @@
-Data-driven dynamical systems toolbox. Written by Stefan Klus
+Data-driven dynamical systems toolbox.
+
+This toolbox contains methods for the approximation of transfer operators and their eigenfunctions as well as methods for learning the governing equations from data:
+- DMD/TICA/AMUSE
+- Ulam's method
+- EDMD
+- kernel EDMD
+- SINDy
+- ...
 
 ====
 
