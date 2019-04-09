@@ -3,7 +3,7 @@
 //------------------------------------------------------------------------------
 // Helper class for accessing numpy matrices
 //------------------------------------------------------------------------------
-NumpyWrapper::NumpyWrapper(boost::python::numpy::ndarray const& x)
+NumpyWrapper::NumpyWrapper(ndarray const& x)
     : shape {x.shape(0), x.shape(1)},
         strides {x.strides(0)/sizeof(double), x.strides(1)/sizeof(double)}
 {
@@ -86,7 +86,7 @@ void EulerMaruyama::eval(Vector& x, Vector& y)
     for (size_t i = 0; i < nSteps_; ++i)
     {
         sde_->f(y, mu_); // compute drift term mu
-        updateNoise(w);      // evaluate Wiener processes
+        updateNoise(w);  // evaluate Wiener processes
         
         for (size_t j = 0; j < d; ++j)
         {
@@ -108,13 +108,13 @@ void EulerMaruyama::updateNoise(Vector& w)
 //------------------------------------------------------------------------------
 // Virtual base class for all dynamical systems
 //------------------------------------------------------------------------------
-boost::python::numpy::ndarray DynamicalSystemInterface::operator()(boost::python::numpy::ndarray const& x)
+ndarray DynamicalSystemInterface::operator()(ndarray const& x)
 {
     NumpyWrapper xw(x); // wrapper for x matrix
     const size_t d = xw.shape[0];
     const size_t m = xw.shape[1];
     
-    boost::python::numpy::ndarray y = boost::python::numpy::zeros(x.get_nd(), x.get_shape(), boost::python::numpy::dtype::get_builtin<double>()); // create output matrix y
+    ndarray y = zeros(x.get_nd(), x.get_shape(), boost::python::numpy::dtype::get_builtin<double>()); // create output matrix y
     NumpyWrapper yw(y);
     
     Vector xi(d), yi(d);
@@ -132,14 +132,14 @@ boost::python::numpy::ndarray DynamicalSystemInterface::operator()(boost::python
     return y;
 }
 
-boost::python::numpy::ndarray DynamicalSystemInterface::getTrajectory(boost::python::numpy::ndarray const& x, size_t length)
+ndarray DynamicalSystemInterface::getTrajectory(ndarray const& x, size_t length)
 {
     NumpyWrapper xw(x); // wrapper for x matrix
     const size_t d = xw.shape[0];
     const size_t m = xw.shape[1];
     
     boost::python::tuple shape = boost::python::make_tuple(d, length);
-    boost::python::numpy::ndarray y = boost::python::numpy::zeros(shape, boost::python::numpy::dtype::get_builtin<double>());
+    ndarray y = zeros(shape, boost::python::numpy::dtype::get_builtin<double>());
     NumpyWrapper yw(y);
     
     for (size_t k = 0; k < d; ++k) // copy initial condition
@@ -191,7 +191,7 @@ void SDE::eval(Vector& x, Vector& y) // implementation of the pure virtual funct
 //------------------------------------------------------------------------------
 HenonMap::HenonMap()
     : a_(1.4),
-        b_(0.3)
+      b_(0.3)
 { }
 
 void HenonMap::eval(Vector& x, Vector& y)
@@ -211,8 +211,8 @@ size_t HenonMap::getDimension() const
 //------------------------------------------------------------------------------
 SimpleODE::SimpleODE(double h, size_t nSteps)
     : ODE(d, h, nSteps),
-        lambda_(-0.75),
-        mu_(-0.5)
+      lambda_(-0.75),
+      mu_(-0.5)
 { }
 
 void SimpleODE::f(Vector& x, Vector& y)
@@ -231,9 +231,9 @@ size_t SimpleODE::getDimension() const
 //------------------------------------------------------------------------------
 ABCFlow::ABCFlow(double h, size_t nSteps)
     : ODE(d, h, nSteps),
-        a_(sqrt(3)),
-        b_(sqrt(2)),
-        c_(1)
+      a_(sqrt(3)),
+      b_(sqrt(2)),
+      c_(1)
 { }
 
 void ABCFlow::f(Vector& x, Vector& y)
@@ -253,8 +253,8 @@ size_t ABCFlow::getDimension() const
 //------------------------------------------------------------------------------
 ChuaCircuit::ChuaCircuit(double h, size_t nSteps)
     : ODE(d, h, nSteps),
-        alpha_(10.0),
-        beta_(14.87)
+      alpha_(10.0),
+      beta_(14.87)
 { }
 
 void ChuaCircuit::f(Vector& x, Vector& y)
@@ -277,7 +277,7 @@ size_t ChuaCircuit::getDimension() const
 //------------------------------------------------------------------------------
 OrnsteinUhlenbeck::OrnsteinUhlenbeck(double h, size_t nSteps)
     : SDE(d, h, nSteps),
-        alpha_(4), D_(0.25)
+      alpha_(4), D_(0.25)
 {}
 
 void OrnsteinUhlenbeck::f(Vector& x, Vector& y)
@@ -463,8 +463,8 @@ size_t BananaSystem::getDimension() const
 //------------------------------------------------------------------------------
 FastSlowSDE::FastSlowSDE(double h, size_t nSteps)
     : SDE(d, h, nSteps),
-        epsilon_(0.01),
-        a_(0.02)
+      epsilon_(0.01),
+      a_(0.02)
 {}
 
 void FastSlowSDE::f(Vector& x, Vector& y)
@@ -576,10 +576,22 @@ size_t DoubleWell6D::getDimension() const
     return d;
 }
 
-
 //------------------------------------------------------------------------------
 // class export to python
 //------------------------------------------------------------------------------
+
+#define S(x) #x
+#define EXPORT_DISC(name)                                  \
+    class_<name>(S(name))                                  \
+            .def("getDimension", &name::getDimension)      \
+            .def("__call__", &name::operator())            \
+            .def("getTrajectory", &name::getTrajectory);
+#define EXPORT_CONT(name)                                  \
+    class_<name>(S(name), init<double, size_t>())          \
+            .def("getDimension", &name::getDimension)      \
+            .def("__call__", &name::operator())            \
+            .def("getTrajectory", &name::getTrajectory);
+
 
 using boost::python::class_;
 using boost::python::init;
@@ -588,66 +600,19 @@ BOOST_PYTHON_MODULE(systems)
 {
     boost::python::numpy::initialize();
     
-    // TODO: write macro to generate code ...
-        
-    class_<HenonMap>("HenonMap")
-        .def("getDimension", &HenonMap::getDimension)
-        .def("__call__", &HenonMap::operator())
-        .def("getTrajectory", &HenonMap::getTrajectory);
-    class_<SimpleODE>("SimpleODE", init<double, size_t>())
-        .def("getDimension", &SimpleODE::getDimension)
-        .def("__call__", &SimpleODE::operator())
-        .def("getTrajectory", &SimpleODE::getTrajectory);
-    class_<ABCFlow>("ABCFlow", init<double, size_t>())
-        .def("getDimension", &ABCFlow::getDimension)
-        .def("__call__", &ABCFlow::operator())
-        .def("getTrajectory", &ABCFlow::getTrajectory);
-    class_<ChuaCircuit>("ChuaCircuit", init<double, size_t>())
-        .def("getDimension", &ChuaCircuit::getDimension)
-        .def("__call__", &ChuaCircuit::operator())
-        .def("getTrajectory", &ChuaCircuit::getTrajectory);
-    class_<OrnsteinUhlenbeck>("OrnsteinUhlenbeck", init<double, size_t>())
-        .def("getDimension", &OrnsteinUhlenbeck::getDimension)
-        .def("__call__", &OrnsteinUhlenbeck::operator())
-        .def("getTrajectory", &OrnsteinUhlenbeck::getTrajectory);
-    class_<TripleWell1D>("TripleWell1D", init<double, size_t>())
-        .def("getDimension", &TripleWell1D::getDimension)
-        .def("__call__", &TripleWell1D::operator())
-        .def("getTrajectory", &TripleWell1D::getTrajectory);
-    class_<DoubleWell2D>("DoubleWell2D", init<double, size_t>())
-        .def("getDimension", &DoubleWell2D::getDimension)
-        .def("__call__", &DoubleWell2D::operator())
-        .def("getTrajectory", &DoubleWell2D::getTrajectory);
-    class_<QuadrupleWell2D>("QuadrupleWell2D", init<double, size_t>())
-        .def("getDimension", &QuadrupleWell2D::getDimension)
-        .def("__call__", &QuadrupleWell2D::operator())
-        .def("getTrajectory", &QuadrupleWell2D::getTrajectory);
-    class_<TripleWell2D>("TripleWell2D", init<double, size_t>())
-        .def("getDimension", &TripleWell2D::getDimension)
-        .def("__call__", &TripleWell2D::operator())
-        .def("getTrajectory", &TripleWell2D::getTrajectory);
-    class_<LemonSlice2D>("LemonSlice2D", init<double, size_t>())
-        .def("getDimension", &LemonSlice2D::getDimension)
-        .def("__call__", &LemonSlice2D::operator())
-        .def("getTrajectory", &LemonSlice2D::getTrajectory);
-    class_<BananaSystem>("BananaSystem", init<double, size_t>())
-        .def("getDimension", &BananaSystem::getDimension)
-        .def("__call__", &BananaSystem::operator())
-        .def("getTrajectory", &BananaSystem::getTrajectory);
-    class_<FastSlowSDE>("FastSlowSDE", init<double, size_t>())
-        .def("getDimension", &FastSlowSDE::getDimension)
-        .def("__call__", &FastSlowSDE::operator())
-        .def("getTrajectory", &FastSlowSDE::getTrajectory);
-    class_<DoubleWell3D>("DoubleWell3D", init<double, size_t>())
-        .def("getDimension", &DoubleWell3D::getDimension)
-        .def("__call__", &DoubleWell3D::operator())
-        .def("getTrajectory", &DoubleWell3D::getTrajectory);
-    class_<TripleWell3D>("TripleWell3D", init<double, size_t>())
-        .def("getDimension", &TripleWell3D::getDimension)
-        .def("__call__", &TripleWell3D::operator())
-        .def("getTrajectory", &TripleWell3D::getTrajectory);
-    class_<DoubleWell6D>("DoubleWell6D", init<double, size_t>())
-        .def("getDimension", &DoubleWell6D::getDimension)
-        .def("__call__", &DoubleWell6D::operator())
-        .def("getTrajectory", &DoubleWell6D::getTrajectory);
+    EXPORT_DISC(HenonMap);
+    EXPORT_CONT(SimpleODE);
+    EXPORT_CONT(ABCFlow);
+    EXPORT_CONT(ChuaCircuit);
+    EXPORT_CONT(OrnsteinUhlenbeck);
+    EXPORT_CONT(TripleWell1D);
+    EXPORT_CONT(DoubleWell2D);
+    EXPORT_CONT(QuadrupleWell2D);
+    EXPORT_CONT(TripleWell2D);
+    EXPORT_CONT(LemonSlice2D);
+    EXPORT_CONT(BananaSystem);
+    EXPORT_CONT(FastSlowSDE);
+    EXPORT_CONT(DoubleWell3D);
+    EXPORT_CONT(TripleWell3D);
+    EXPORT_CONT(DoubleWell6D);
 }

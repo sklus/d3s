@@ -9,6 +9,8 @@ import d3s.observables as observables
 import d3s.algorithms as algorithms
 import d3s.systems as systems
 
+#%% create system
+
 # define domain
 bounds = sp.array([[-2, 2], [-2, 2]])
 boxes = sp.array([30, 30])

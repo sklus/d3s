@@ -11,6 +11,7 @@
 
 typedef std::vector<double> Vector;
 typedef std::vector<std::vector<double>> Matrix;
+typedef boost::python::numpy::ndarray ndarray;
 
 typedef boost::mt19937 MersenneTwister;
 typedef boost::normal_distribution<> NormalDistribution;
@@ -26,7 +27,7 @@ class SDE;
 class NumpyWrapper
 {
 public:
-    NumpyWrapper(boost::python::numpy::ndarray const& x);
+    NumpyWrapper(ndarray const& x);
     double& operator()(size_t i, size_t j);
     
     Py_intptr_t shape[2]; ///< number of rows and columns
@@ -79,8 +80,8 @@ class DynamicalSystemInterface
 public:
     virtual ~DynamicalSystemInterface() {};
     
-    virtual boost::python::numpy::ndarray operator()(boost::python::numpy::ndarray const& x); ///< Evaluates the dynamical system for all data points contained in x = [x_1, x_2, ..., x_m].
-    virtual boost::python::numpy::ndarray getTrajectory(boost::python::numpy::ndarray const& x, size_t length); ///< Generate a trajectory for one data point x.
+    virtual ndarray operator()(ndarray const& x); ///< Evaluates the dynamical system for all data points contained in x = [x_1, x_2, ..., x_m].
+    virtual ndarray getTrajectory(ndarray const& x, size_t length); ///< Generate a trajectory for one data point x.
     virtual void eval(Vector& x, Vector& y) = 0; ///< Evaluates the dynamical system for one test point x. Must be implemented by derived classes.
     virtual size_t getDimension() const = 0; ///< Returns the number of dimensions d of the dynamical system.
 };

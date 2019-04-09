@@ -207,6 +207,7 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
             Xi[ind, b] = Y[ind, :] @ _scipy.linalg.pinv(PsiX[b, :])
     return Xi
 
+
 def kpca(X, k, evs=5):
     '''
     Kernel PCA. Returns data projected onto principal components.
@@ -217,12 +218,70 @@ def kpca(X, k, evs=5):
     '''
     G = _kernels.gramian(X, k) # Gram matrix
     
+    # center Gram matrix
     n = X.shape[1]
     N = _scipy.eye(n) - 1/n*_scipy.ones((n, n))
-    G = N @ G @ N # averaged Gram matrix
-    
+    G = N @ G @ N    
     d, V = sortEig(G, evs)
     return (d, V)
+
+
+def kcca(X, Y, k, evs=5, epsilon=1e-6):
+    '''
+    Kernel CCA. Returns nonlinear transformation of the data X.
+    
+    :param X:    data matrix, each column represents a data point
+    :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
+    :param k:    kernel
+    :param evs:  number of eigenvalues/eigenvectors
+    :epsilon:    regularization parameter
+    '''
+    G_0 = _kernels.gramian(X, k)
+    G_1 = _kernels.gramian(Y, k)
+    
+    # center Gram matrices
+    n = X.shape[1]
+    I = _scipy.eye(n)
+    N = I - 1/n*_scipy.ones((n, n))
+    G_0 = N @ G_0 @ N
+    G_1 = N @ G_1 @ N
+    
+    A = _scipy.linalg.solve(G_0 + epsilon*I, G_0, assume_a='sym') \
+      @ _scipy.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')
+    
+    d, V = sortEig(A, evs)
+    return (d, V)
+
+
+def cmd(X, Y, evs=5, epsilon=1e-6):
+    '''
+    Coherent mode decomposition. Returns modes xi and eta.
+    
+    :param X:    data matrix, each column represents a data point
+    :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
+    :param evs:  number of eigenvalues/eigenvectors
+    :epsilon:    regularization parameter
+    '''
+    G_0 = X.T @ X
+    G_1 = Y.T @ Y
+    
+    # center Gram matrices
+    n = X.shape[1]
+    I = _scipy.eye(n)
+    N = I - 1/n*_scipy.ones((n, n))
+    G_0 = N @ G_0 @ N
+    G_1 = N @ G_1 @ N
+    
+    A = _scipy.linalg.solve(G_0 + epsilon*I, _scipy.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')) @ G_0
+    
+    d, V = sortEig(A, evs)
+    rho = _scipy.sqrt(d);
+    W = _scipy.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _scipy.diag(rho)
+    
+    Xi = X @ V
+    Eta = Y @ W
+    
+    return (rho, Xi, Eta)
 
 
 # auxiliary functions
