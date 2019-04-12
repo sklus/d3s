@@ -5,20 +5,6 @@ import scipy.sparse.linalg
 import d3s.observables as _observables
 import d3s.kernels as _kernels
 
-# The algorithms are implemented based on the following publications:
-# S. Brunton, J. Proctor, J. Kutz:
-#    Discovering governing equations from data by sparse identification of nonlinear dynamical systems.
-# M. Williams, I. Kevrekidis, C. Rowley:
-#    A data-driven approximation of the Koopman operator: Extending dynamic mode decomposition.
-# M. Williams, C. Rowley, I. Kevrekidis:
-#    A kernel-based method for data-driven Koopman spectral analysis.
-# S. Klus, P. Koltai, C. Schütte:
-#    On the numerical approximation of the Perron-Frobenius and Koopman operator.
-# S. Klus, F. Nüske, P. Koltai, H. Wu, I. Kevrekidis, C. Schütte, F. Noé:
-#    Data-driven model reduction and transfer operator approximation.
-# S. Klus, I. Schuster, K. Muandet:
-#    Eigendecompositions of transfer operators in reproducing kernel Hilbert spaces.
-
 
 def dmd(X, Y, mode='exact'):
     '''
@@ -39,6 +25,7 @@ def dmd(X, Y, mode='exact'):
         raise ValueError('Only exact and standard DMD available.')
 
     return d, Phi
+
 
 def dmdc(X, Y, U, svThresh=1e-10):
     """
