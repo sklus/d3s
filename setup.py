@@ -12,13 +12,14 @@ if not boost:
 d3s_folder_path = os.path.join(os.path.dirname(__file__), "d3s")
 if "develop" in sys.argv and not os.path.exists(d3s_folder_path):
     os.mkdir(d3s_folder_path)
-    
+
+compile_args = '-I' + boost + '/include'
 link_args = '-Wl,-rpath,' + boost + '/lib'
 
 e = Extension('d3s.systems',
               sources=['cpp/systems.cpp'],
               language='c++',
-              extra_compile_args=['-c', '-O3', '-fPIC', '-D_UNIX', '-std=c++11', '-Wno-deprecated-declarations'],
+              extra_compile_args=['-c', '-O3', '-fPIC', '-D_UNIX', '-std=c++11', '-Wno-deprecated-declarations', compile_args],
               extra_link_args=[link_args],
               include_dirs=[boost, 'm'],
               libraries=['boost_python37', 'boost_numpy37'],
