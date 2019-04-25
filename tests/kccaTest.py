@@ -41,7 +41,7 @@ plt.show()
 #%% time-dependent 5-well potential ---------------------------------------------------------------
 
 #%% load variables from mat file into main scope
-data = sp.io.loadmat('data/mls.mat', squeeze_me=True)
+data = sp.io.loadmat('data/moving5well.mat', squeeze_me=True)
 for s in data.keys():
     if s[:2] == '__' and s[-2:] == '__': continue
     exec('%s = data["%s"]' % (s, s))
