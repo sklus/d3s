@@ -8,6 +8,8 @@ This toolbox contains methods for the approximation of transfer operators and th
 - EDMD
 - kernel EDMD
 - SINDy
+- Kernel PCA/CCA
+- CMD
 - ...
  
 The algorithms are implemented based on the following publications:
