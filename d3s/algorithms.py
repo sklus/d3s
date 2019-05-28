@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import numpy as _numpy
 import scipy as _scipy
 import scipy.sparse.linalg
 
@@ -28,14 +29,14 @@ def dmd(X, Y, mode='exact'):
 
 
 def dmdc(X, Y, U, svThresh=1e-10):
-    """
+    '''
     DMD + control where control matrix B is unknown, https://arxiv.org/abs/1409.6358
     :param X: State matrix in Reals NxM-1, where N is dim of state vector, M is number of samples
     :param Y: One step time-laged state matrix in Reals NxM-1
     :param U: Control input matrix, in Reals QxM-1, where Q is dim of control vector
     :param svThresh: Threshold below which to discard singular values
     :return: A_approx, B_approx, Phi  (where Phi are dynamic modes of A)
-    """
+    '''
     n = X.shape[0] # size of state vector
     q = U.shape[0] # size of control vector
 
@@ -269,6 +270,64 @@ def cmd(X, Y, evs=5, epsilon=1e-6):
     Eta = Y @ W
     
     return (rho, Xi, Eta)
+
+
+def seba(V, R0=None, maxIter=5000):
+    '''
+    Sparse eigenbasis approximation as described in 
+    
+    "Sparse eigenbasis approximation: Multiple feature extraction across spatiotemporal scales with
+    application to coherent set identification" by G. Froyland, C. Rock, and K. Sakellariou.
+    
+    Based on the original Matlab implementation, see https://github.com/gfroyland/SEBA.
+    
+    :param V:        eigenvectors
+    :param R0:       optional initial rotation
+    :param maxIter:  maximum number of iterations
+    :return:         sparse basis output
+    '''
+    n, r = V.shape
+    
+    V, _ = _scipy.linalg.qr(V, mode='economic')
+    mu = 0.99/_scipy.sqrt(n)
+    
+    # TODO: perturb near-constant vectors?
+    
+    if R0 == None:
+        R0 = _scipy.eye(r)
+    else:
+        R0, _ = _scipy.linalg.polar(R0)
+    
+    S = _scipy.zeros((n, r))
+    
+    for i in range(maxIter):
+        Z = V @ R0.T
+        
+        # threshold
+        for j in range(r):
+            S[:, j] = _scipy.sign(Z[:, j]) * _scipy.maximum(abs(Z[:, j]) - mu, 0)
+            S[:, j] = S[:, j]/_scipy.linalg.norm(S[:, j])
+        
+        # polar decomposition
+        R1, _ = _scipy.linalg.polar(S.T @ V)
+        
+        # check whether converged
+        if _scipy.linalg.norm(R1 - R0) < 1e-14:
+            break
+        
+        # overwrite initial matrix with new matrix
+        R0 = R1.copy()
+    
+    # choose correct parity and normalize
+    for j in range(r):
+        S[:, j] = S[:, j] * _scipy.sign(S[:, j].sum())
+        S[:, j] = S[:, j] / _scipy.amax(S[:, j])
+    
+    # sort vectors
+    ind = _scipy.argsort(-_numpy.min(S, axis=0))
+    S = S[:, ind]
+        
+    return S
 
 
 # auxiliary functions

@@ -23,19 +23,26 @@ for s in data.keys():
 sigma = 1
 k = kernels.gaussianKernel(sigma)
 
-evs = 5 # number of eigenfunctions to be computed
+evs = 9 # number of eigenfunctions to be computed
 d, V = algorithms.kcca(X, Y, k, evs, epsilon=1e-3)
 
 #%% plot eigenvectors
 for i in range(evs):
-    plt.figure()
+    plt.figure(figsize=(3, 2))
     plt.scatter(X[0, :], X[1, :], c=V[:, i])
 plt.show()
 
 #%% k-means of eigenvectors
-c, l = sp.cluster.vq.kmeans2(np.real(V[:, 0:4]), 5)
-plt.figure()
+c, l = sp.cluster.vq.kmeans2(np.real(V), 5)
+plt.figure(figsize=(3, 2))
 plt.scatter(X[0, :], X[1, :], c=l)
+plt.show()
+
+#%% seba
+S = algorithms.seba(np.real(V))
+
+plt.figure(figsize=(3, 2))
+plt.scatter(X[0, :], X[1, :], c=S[:, 0:7].sum(axis=1))
 plt.show()
 
 #%% time-dependent 5-well potential ---------------------------------------------------------------
@@ -56,7 +63,7 @@ plt.plot(d, 'o')
 plt.show()
 
 #%% k-means of eigenvectors
-c, l = sp.cluster.vq.kmeans2(np.real(V[:, 0:4]), 5)
+c, l = sp.cluster.vq.kmeans2(np.real(V[:, 0:5]), 5)
 fig = plt.figure()
 plt.scatter(X[0, :], X[1, :], c=l)
 plt.show()
