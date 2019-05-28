@@ -6,6 +6,23 @@ import scipy.sparse.linalg
 import d3s.observables as _observables
 import d3s.kernels as _kernels
 
+'''
+The implementations of the methods 
+ 
+    - DMD, TICA, AMUSE
+    - Ulam's method
+    - EDMD, kernel EDMD
+    - SINDy
+    - kernel PCA, kernel CCA
+    - CMD
+    - SEBA
+ 
+are based on the publications listed here:
+ 
+    https://github.com/sklus/d3s
+
+'''
+
 
 def dmd(X, Y, mode='exact'):
     '''
@@ -285,13 +302,13 @@ def seba(V, R0=None, maxIter=5000):
     :param R0:       optional initial rotation
     :param maxIter:  maximum number of iterations
     :return:         sparse basis output
+    
+    TODO: perturb near-constant vectors?
     '''
     n, r = V.shape
     
     V, _ = _scipy.linalg.qr(V, mode='economic')
     mu = 0.99/_scipy.sqrt(n)
-    
-    # TODO: perturb near-constant vectors?
     
     if R0 == None:
         R0 = _scipy.eye(r)
