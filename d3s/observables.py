@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-
 import math
-import numpy as _numpy
+import numpy as _np
 from scipy.spatial import distance
 
 
@@ -30,14 +29,61 @@ class monomials(object):
         [d, m] = x.shape # d = dimension of state space, m = number of test points
         c = allMonomialPowers(d, self.p) # matrix containing all powers for the monomials
         n = c.shape[1] # number of monomials
-        y = _numpy.ones([n, m])
+        y = _np.ones([n, m])
         for i in range(n):
             for j in range(d):
-                y[i, :] = _numpy.multiply(y[i, :], _numpy.power(x[j, :], c[j, i]))
+                y[i, :] = y[i, :] * _np.power(x[j, :], c[j, i])
         return y
-
+    
+    def diff(self, x):
+        '''
+        Compute partial derivatives for all data points in x.
+        '''
+        [d, m] = x.shape # d = dimension of state space, m = number of test points
+        c = allMonomialPowers(d, self.p) # matrix containing all powers for the monomials
+        n = c.shape[1] # number of monomials
+        y = _np.zeros([n, d, m])
+        for i in range(n): # for all monomials
+            for j in range(d): # for all dimensions
+                e = c[:, i].copy() # exponents of ith monomial
+                a = e[j]
+                e[j] = e[j] - 1 # derivative w.r.t. j
+                
+                if _np.any(e < 0):
+                    continue # nothing to do, already zero
+                
+                y[i, j, :] = a*_np.ones([1, m])
+                for k in range(d):
+                    y[i, j, :] = y[i, j, :] * _np.power(x[k, :], e[k])
+        return y
+    
+    def ddiff(self, x):
+        '''
+        Compute second order derivatives for all data points in x.
+        '''
+        [d, m] = x.shape # d = dimension of state space, m = number of test points
+        c = allMonomialPowers(d, self.p) # matrix containing all powers for the monomials
+        n = c.shape[1] # number of monomials
+        y = _np.zeros([n, d, d, m])
+        for i in range(n): # for all monomials
+            for j1 in range(d): # for all dimensions
+                for j2 in range(d): # for all dimensions
+                    e = c[:, i].copy() # exponents of ith monomial
+                    a = e[j1]
+                    e[j1] = e[j1] - 1 # derivative w.r.t. j1
+                    a *= e[j2];
+                    e[j2] = e[j2] - 1 # derivative w.r.t. j2
+                    
+                    if _np.any(e < 0):
+                        continue # nothing to do, already zero
+                    
+                    y[i, j1, j2, :] = a*_np.ones([1, m])
+                    for k in range(d):
+                        y[i, j1, j2, :] = y[i, j1, j2, :] * _np.power(x[k, :], e[k])
+        return y
+        
     def __repr__(self):
-        return 'Monomials of order up to = %d.' % self.p
+        return 'Monomials of order up to %d.' % self.p
 
 
 class indicators(object):
@@ -50,7 +96,7 @@ class indicators(object):
     def __call__(self, x):
         [d, m] = x.shape # d = dimension of state space, m = number of test points
         n = self.Omega.numBoxes()
-        y = _numpy.zeros([n, m])
+        y = _np.zeros([n, m])
         for i in range(m):
             ind = self.Omega.index(x[:, i])
             pass
@@ -76,7 +122,7 @@ class gaussians(object):
     def __call__(self, x):
         c = self.Omega.midpointGrid()
         D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
-        y = _numpy.exp(-1/(self.sigma**2)*D)
+        y = _np.exp(-1/(self.sigma**2)*D)
         return y
 
     def __repr__(self):
@@ -128,9 +174,9 @@ def allMonomialPowers(d, p):
     # [ 0  0  1  0  0  1  0  2  1  0]
     # [ 0  0  0  1  0  0  1  0  1  2]]
     n = nchoosek(p + d, p) # number of monomials
-    x = _numpy.zeros(d) # vector containing powers for the monomials, initially zero
-    c = _numpy.zeros([d, n]) # matrix containing all powers for the monomials
+    x = _np.zeros(d) # vector containing powers for the monomials, initially zero
+    c = _np.zeros([d, n]) # matrix containing all powers for the monomials
     for i in range(1, n):
         c[:, i] = nextMonomialPowers(x)
-    c = _numpy.flipud(c) # flip array in the up/down direction
+    c = _np.flipud(c) # flip array in the up/down direction
     return c

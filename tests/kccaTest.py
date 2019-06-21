@@ -33,14 +33,13 @@ for i in range(evs):
 plt.show()
 
 #%% k-means of eigenvectors
-c, l = sp.cluster.vq.kmeans2(np.real(V), 5)
+c, l = sp.cluster.vq.kmeans2(np.real(V[:, :5]), 5)
 plt.figure(figsize=(3, 2))
 plt.scatter(X[0, :], X[1, :], c=l)
 plt.show()
 
 #%% seba
 S = algorithms.seba(np.real(V))
-
 plt.figure(figsize=(3, 2))
 plt.scatter(X[0, :], X[1, :], c=S[:, 0:7].sum(axis=1))
 plt.show()

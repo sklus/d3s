@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-import numpy as _numpy
+import numpy as _np
 import os as _os
 import time as _time
 import scipy.io as _sio
@@ -9,12 +8,12 @@ import scipy.io as _sio
 
 def indexS2M(sInd, dims):
     '''Single- to multi-index.'''
-    return _numpy.array(_numpy.unravel_index(sInd, dims))
+    return _np.array(_np.unravel_index(sInd, dims))
 
 
 def indexM2S(mInd, dims):
     '''Multi- to single-index.'''
-    return _numpy.ravel_multi_index(mInd, dims)
+    return _np.ravel_multi_index(mInd, dims)
 
 
 def printVector(x, name = None, k = 8):

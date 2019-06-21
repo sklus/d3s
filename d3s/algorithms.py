@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import numpy as _numpy
-import scipy as _scipy
+import numpy as _np
+import scipy as _sp
 import scipy.sparse.linalg
 
 import d3s.observables as _observables
@@ -29,14 +29,15 @@ def dmd(X, Y, mode='exact'):
     Exact and standard DMD of the data matrices X and Y.
 
     :param mode: 'exact' for exact DMD or 'standard' for standard DMD
+    :return:     eigenvalues d and modes Phi
     '''
-    U, s, Vt = _scipy.linalg.svd(X, full_matrices=False)
-    S_inv = _scipy.diag(1/s)
+    U, s, Vt = _sp.linalg.svd(X, full_matrices=False)
+    S_inv = _sp.diag(1/s)
     A = U.transpose() @ Y @ Vt.transpose() @ S_inv
     d, W = sortEig(A, A.shape[0])
 
     if mode == 'exact':
-        Phi = Y @ Vt.transpose() @ S_inv @ W @ _scipy.diag(1/d)
+        Phi = Y @ Vt.transpose() @ S_inv @ W @ _sp.diag(1/d)
     elif mode == 'standard':
         Phi = U @ W
     else:
@@ -82,11 +83,11 @@ def dmdc(X, Y, U, svThresh=1e-10):
     A_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UA.T @ U2_truncated
     B_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UB.T
 
-    # Eigen decomposition of A_approx
+    # eigendecomposition of A_approx
     w, _ = scipy.linalg.eig(A_approx)
     W = scipy.diag(w)
 
-    # Compute dynamic modes of A
+    # compute dynamic modes of A
     Phi = Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UA.T @ U2_truncated @ W
 
     return A_approx, B_approx, Phi
@@ -95,9 +96,11 @@ def dmdc(X, Y, U, svThresh=1e-10):
 def amuse(X, Y, evs=5):
     '''
     AMUSE implementation of TICA, see TICA documentation.
+    
+    :return:    eigenvalues d and corresponding eigenvectors Phi containing the coefficients for the eigenfunctions
     '''
-    U, s, _ = _scipy.linalg.svd(X, full_matrices=False)
-    S_inv = _scipy.diag(1/s)
+    U, s, _ = _sp.linalg.svd(X, full_matrices=False)
+    S_inv = _sp.diag(1/s)
     Xp = S_inv @ U.transpose() @ X
     Yp = S_inv @ U.transpose() @ Y
     K = Xp @ Yp.transpose()
@@ -106,7 +109,7 @@ def amuse(X, Y, evs=5):
 
     # normalize eigenvectors
     for i in range(Phi.shape[1]):
-        Phi[:, i] /= _scipy.linalg.norm(Phi[:, i])
+        Phi[:, i] /= _sp.linalg.norm(Phi[:, i])
     return d, Phi
 
 
@@ -115,6 +118,7 @@ def tica(X, Y, evs=5):
     Time-lagged independent component analysis of the data matrices X and Y.
 
     :param evs: number of eigenvalues/eigenvectors
+    :return:    eigenvalues d and corresponding eigenvectors V containing the coefficients for the eigenfunctions
     '''
     return edmd(X, Y, _observables.identity, evs=evs)
 
@@ -127,12 +131,13 @@ def ulam(X, Y, Omega, evs=5, operator='K'):
     :param Omega:    box discretization of type topy.domain.discretization
     :param evs:      number of eigenvalues/eigenvectors
     :param operator: 'K' for Koopman or 'P' for Perron-Frobenius
+    :return:         eigenvalues d and corresponding eigenvectors V containing the coefficients for the eigenfunctions
 
     TODO: Switch to sparse matrices.
     '''
     m = X.shape[1] # number of test points
     n = Omega.numBoxes() # number of boxes
-    A = _scipy.zeros([n, n])
+    A = _sp.zeros([n, n])
     # compute transitions
     for i in range(m):
         ix = Omega.index(X[:, i])
@@ -156,6 +161,7 @@ def edmd(X, Y, psi, evs=5, operator='K'):
     :param psi:      set of basis functions, see d3s.observables
     :param evs:      number of eigenvalues/eigenvectors
     :param operator: 'K' for Koopman or 'P' for Perron-Frobenius
+    :return:         eigenvalues d and corresponding eigenvectors V containing the coefficients for the eigenfunctions
     '''
     PsiX = psi(X)
     PsiY = psi(Y)
@@ -163,10 +169,9 @@ def edmd(X, Y, psi, evs=5, operator='K'):
     C_1 = PsiX @ PsiY.transpose()
     if operator == 'P': C_1 = C_1.transpose()
 
-    A = _scipy.linalg.pinv(C_0) @ C_1
+    A = _sp.linalg.pinv(C_0) @ C_1
     d, V = sortEig(A, evs)
     return (d, V)
-
 
 def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     '''
@@ -177,6 +182,7 @@ def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     :param epsilon:  regularization parameter
     :param evs:      number of eigenvalues/eigenvectors
     :param operator: 'K' for Koopman or 'P' for Perron-Frobenius (note that the default is P here)
+    :return:         eigenvalues d and eigenfunctions evaluated in X
     '''
     if isinstance(X, list): # e.g., for strings
         n = len(X)
@@ -187,7 +193,7 @@ def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     G_1 = _kernels.gramian2(X, Y, k)
     if operator == 'K': G_1 = G_1.transpose()
 
-    A = _scipy.linalg.pinv(G_0 + epsilon*_scipy.eye(n), rcond=1e-15) @ G_1
+    A = _sp.linalg.pinv(G_0 + epsilon*_sp.eye(n), rcond=1e-15) @ G_1
     d, V = sortEig(A, evs)
     if operator == 'K': V = G_0 @ V
     return (d, V)
@@ -200,32 +206,34 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
     :param psi:        set of basis functions, see topy.observables
     :param eps:        cutoff threshold
     :param iterations: number of sparsification steps
+    :return:           coefficient matrix Xi
     '''
     PsiX = psi(X)
-    Xi = Y @ _scipy.linalg.pinv(PsiX) # least-squares initial guess
+    Xi = Y @ _sp.linalg.pinv(PsiX) # least-squares initial guess
 
     for k in range(iterations):
         s = abs(Xi) < eps # find coefficients less than eps ...
         Xi[s] = 0         # ... and set them to zero
         for ind in range(X.shape[0]):
             b = ~s[ind, :] # consider only functions corresponding to coefficients greater than eps
-            Xi[ind, b] = Y[ind, :] @ _scipy.linalg.pinv(PsiX[b, :])
+            Xi[ind, b] = Y[ind, :] @ _sp.linalg.pinv(PsiX[b, :])
     return Xi
 
 
 def kpca(X, k, evs=5):
     '''
-    Kernel PCA. Returns data projected onto principal components.
+    Kernel PCA.
     
     :param X:    data matrix, each column represents a data point
     :param k:    kernel
     :param evs:  number of eigenvalues/eigenvectors
+    :return:     data X projected onto principal components
     '''
     G = _kernels.gramian(X, k) # Gram matrix
     
     # center Gram matrix
     n = X.shape[1]
-    N = _scipy.eye(n) - 1/n*_scipy.ones((n, n))
+    N = _sp.eye(n) - 1/n*_sp.ones((n, n))
     G = N @ G @ N    
     d, V = sortEig(G, evs)
     return (d, V)
@@ -233,26 +241,27 @@ def kpca(X, k, evs=5):
 
 def kcca(X, Y, k, evs=5, epsilon=1e-6):
     '''
-    Kernel CCA. Returns nonlinear transformation of the data X.
+    Kernel CCA.
     
     :param X:    data matrix, each column represents a data point
     :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
     :param k:    kernel
     :param evs:  number of eigenvalues/eigenvectors
     :epsilon:    regularization parameter
+    :return:     nonlinear transformation of the data X
     '''
     G_0 = _kernels.gramian(X, k)
     G_1 = _kernels.gramian(Y, k)
     
     # center Gram matrices
     n = X.shape[1]
-    I = _scipy.eye(n)
-    N = I - 1/n*_scipy.ones((n, n))
+    I = _sp.eye(n)
+    N = I - 1/n*_sp.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
     
-    A = _scipy.linalg.solve(G_0 + epsilon*I, G_0, assume_a='sym') \
-      @ _scipy.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')
+    A = _sp.linalg.solve(G_0 + epsilon*I, G_0, assume_a='sym') \
+      @ _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')
     
     d, V = sortEig(A, evs)
     return (d, V)
@@ -260,28 +269,29 @@ def kcca(X, Y, k, evs=5, epsilon=1e-6):
 
 def cmd(X, Y, evs=5, epsilon=1e-6):
     '''
-    Coherent mode decomposition. Returns modes xi and eta.
+    Coherent mode decomposition.
     
     :param X:    data matrix, each column represents a data point
     :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
     :param evs:  number of eigenvalues/eigenvectors
     :epsilon:    regularization parameter
+    :return:     eigenvalues and modes xi and eta
     '''
     G_0 = X.T @ X
     G_1 = Y.T @ Y
     
     # center Gram matrices
     n = X.shape[1]
-    I = _scipy.eye(n)
-    N = I - 1/n*_scipy.ones((n, n))
+    I = _sp.eye(n)
+    N = I - 1/n*_sp.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
     
-    A = _scipy.linalg.solve(G_0 + epsilon*I, _scipy.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')) @ G_0
+    A = _sp.linalg.solve(G_0 + epsilon*I, _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')) @ G_0
     
     d, V = sortEig(A, evs)
-    rho = _scipy.sqrt(d);
-    W = _scipy.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _scipy.diag(rho)
+    rho = _sp.sqrt(d);
+    W = _sp.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _sp.diag(rho)
     
     Xi = X @ V
     Eta = Y @ W
@@ -307,29 +317,29 @@ def seba(V, R0=None, maxIter=5000):
     '''
     n, r = V.shape
     
-    V, _ = _scipy.linalg.qr(V, mode='economic')
-    mu = 0.99/_scipy.sqrt(n)
+    V, _ = _sp.linalg.qr(V, mode='economic')
+    mu = 0.99/_sp.sqrt(n)
     
     if R0 == None:
-        R0 = _scipy.eye(r)
+        R0 = _sp.eye(r)
     else:
-        R0, _ = _scipy.linalg.polar(R0)
+        R0, _ = _sp.linalg.polar(R0)
     
-    S = _scipy.zeros((n, r))
+    S = _sp.zeros((n, r))
     
     for i in range(maxIter):
         Z = V @ R0.T
         
         # threshold
         for j in range(r):
-            S[:, j] = _scipy.sign(Z[:, j]) * _scipy.maximum(abs(Z[:, j]) - mu, 0)
-            S[:, j] = S[:, j]/_scipy.linalg.norm(S[:, j])
+            S[:, j] = _sp.sign(Z[:, j]) * _sp.maximum(abs(Z[:, j]) - mu, 0)
+            S[:, j] = S[:, j]/_sp.linalg.norm(S[:, j])
         
         # polar decomposition
-        R1, _ = _scipy.linalg.polar(S.T @ V)
+        R1, _ = _sp.linalg.polar(S.T @ V)
         
         # check whether converged
-        if _scipy.linalg.norm(R1 - R0) < 1e-14:
+        if _sp.linalg.norm(R1 - R0) < 1e-14:
             break
         
         # overwrite initial matrix with new matrix
@@ -337,11 +347,11 @@ def seba(V, R0=None, maxIter=5000):
     
     # choose correct parity and normalize
     for j in range(r):
-        S[:, j] = S[:, j] * _scipy.sign(S[:, j].sum())
-        S[:, j] = S[:, j] / _scipy.amax(S[:, j])
+        S[:, j] = S[:, j] * _sp.sign(S[:, j].sum())
+        S[:, j] = S[:, j] / _sp.amax(S[:, j])
     
     # sort vectors
-    ind = _scipy.argsort(-_numpy.min(S, axis=0))
+    ind = _sp.argsort(_np.min(S, axis=0))[::-1]
     S = S[:, ind]
         
     return S
@@ -353,11 +363,12 @@ def sortEig(A, evs=5):
     Computes eigenvalues and eigenvectors of A and sorts them in decreasing lexicographic order.
 
     :param evs: number of eigenvalues/eigenvectors
+    :return:    sorted eigenvalues and eigenvectors
     '''
     n = A.shape[0]
     if evs < n:
-        d, V = _scipy.sparse.linalg.eigs(A, evs)
+        d, V = _sp.sparse.linalg.eigs(A, evs)
     else:
-        d, V = _scipy.linalg.eig(A)
+        d, V = _sp.linalg.eig(A)
     ind = d.argsort()[::-1] # [::-1] reverses the list of indices
     return (d[ind], V[:, ind])

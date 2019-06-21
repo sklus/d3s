@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import numpy as _numpy
+import numpy as _np
 from scipy.spatial import distance
 
 
@@ -9,7 +9,7 @@ class gaussianKernel(object):
     def __init__(self, sigma):
         self.sigma = sigma
     def __call__(self, x, y):
-        return _numpy.exp(-_numpy.linalg.norm(x-y)**2/(2*self.sigma**2))
+        return _np.exp(-_np.linalg.norm(x-y)**2/(2*self.sigma**2))
     def __repr__(self):
         return 'Gaussian kernel with bandwidth sigma = %f.' % self.sigma
 
@@ -19,7 +19,7 @@ class laplacianKernel(object):
     def __init__(self, sigma):
         self.sigma = sigma
     def __call__(self, x, y):
-        return _numpy.exp(-_numpy.linalg.norm(x-y)/self.sigma)
+        return _np.exp(-_np.linalg.norm(x-y)/self.sigma)
     def __repr__(self):
         return 'Laplacian kernel with bandwidth sigma = %f.' % self.sigma
 
@@ -45,7 +45,7 @@ class stringKernel(object):
         self._l  = l  # decay factor
 
     def __call__(self, x, y):
-        return self.evaluate(x, y) / _numpy.sqrt(self.evaluate(x, x)*self.evaluate(y, y))
+        return self.evaluate(x, y) / _np.sqrt(self.evaluate(x, x)*self.evaluate(y, y))
 
     def __repr__(self):
         return 'String kernel.'
@@ -54,7 +54,7 @@ class stringKernel(object):
         '''Unnormalized string kernel evaluation.'''
         lx = len(x)
         ly = len(y)
-        Kd = _numpy.zeros([2, lx+1, ly+1])
+        Kd = _np.zeros([2, lx+1, ly+1])
 
         # dynamic programming
         for i in range(2):
@@ -91,36 +91,36 @@ def gramian(X, k):
     '''Compute Gram matrix for training data X with kernel k.'''
     name = k.__class__.__name__
     if name == 'gaussianKernel':
-        return _numpy.exp(-distance.squareform(distance.pdist(X.transpose(), 'sqeuclidean'))/(2*k.sigma**2))
+        return _np.exp(-distance.squareform(distance.pdist(X.transpose(), 'sqeuclidean'))/(2*k.sigma**2))
     elif name == 'laplacianKernel':
-        return _numpy.exp(-distance.squareform(distance.pdist(X.transpose(), 'euclidean'))/k.sigma)
+        return _np.exp(-distance.squareform(distance.pdist(X.transpose(), 'euclidean'))/k.sigma)
     elif name == 'polynomialKernel':
         return (k.c + X.transpose()@X)**k.p
     elif name == 'stringKernel':
         n = len(X)
         # compute weights for normalization
-        d = _numpy.zeros(n)
+        d = _np.zeros(n)
         for i in range(n):
             d[i] = k.evaluate(X[i], X[i])
         # compute Gram matrix
-        G = _numpy.ones([n, n]) # diagonal automatically set to 1
+        G = _np.ones([n, n]) # diagonal automatically set to 1
         for i in range(n):
             for j in range(i):
-                G[i, j] = k.evaluate(X[i], X[j]) / _numpy.sqrt(d[i]*d[j])
+                G[i, j] = k.evaluate(X[i], X[j]) / _np.sqrt(d[i]*d[j])
                 G[j, i] = G[i, j]
         return G
     else:
         #print('User-defined kernel.')
         if isinstance(X, list): # e.g., for strings
             n = len(X)
-            G = _numpy.zeros([n, n])
+            G = _np.zeros([n, n])
             for i in range(n):
                 for j in range(i+1):
                     G[i, j] = k(X[i], X[j])
                     G[j, i] = G[i, j]
         else:
             n = X.shape[1]
-            G = _numpy.zeros([n, n])
+            G = _np.zeros([n, n])
             for i in range(n):
                 for j in range(i+1):
                     G[i, j] = k(X[:, i], X[:, j])
@@ -133,36 +133,36 @@ def gramian2(X, Y, k):
     name = k.__class__.__name__
     if name == 'gaussianKernel':
         #print('Gaussian kernel with sigma = %f.' % k.sigma)
-        return _numpy.exp(-distance.cdist(X.transpose(), Y.transpose(), 'sqeuclidean')/(2*k.sigma**2))
+        return _np.exp(-distance.cdist(X.transpose(), Y.transpose(), 'sqeuclidean')/(2*k.sigma**2))
     elif name == 'laplacianKernel':
         #print('Laplacian kernel with sigma = %f.' % k.sigma)
-        return _numpy.exp(-distance.cdist(X.transpose(), Y.transpose(), 'euclidean')/k.sigma)
+        return _np.exp(-distance.cdist(X.transpose(), Y.transpose(), 'euclidean')/k.sigma)
     elif name == 'polynomialKernel':
         #print('Polynomial kernel with degree = %f and c = %f.' % (k.p, k.c))
         return (k.c + X.transpose()@Y)**k.p
     elif name == 'stringKernel':
         n = len(X)
-        d = _numpy.zeros([n, 2])
+        d = _np.zeros([n, 2])
         for i in range(n):
             d[i, 0] = k.evaluate(X[i], X[i])
             d[i, 1] = k.evaluate(Y[i], Y[i])
         # compute Gram matrix
-        G = _numpy.zeros([n, n])
+        G = _np.zeros([n, n])
         for i in range(n):
             for j in range(n):
-                G[i, j] = k.evaluate(X[i], Y[j]) / _numpy.sqrt(d[i, 0]*d[j, 1])
+                G[i, j] = k.evaluate(X[i], Y[j]) / _np.sqrt(d[i, 0]*d[j, 1])
         return G
     else:
         #print('User-defined kernel.')
         if isinstance(X, list): # e.g., for strings
             n = len(X)
-            G = _numpy.zeros([n, n])
+            G = _np.zeros([n, n])
             for i in range(n):
                 for j in range(n):
                     G[i, j] = k(X[i], Y[j])
         else:
             n = X.shape[1]
-            G = _numpy.zeros([n, n])
+            G = _np.zeros([n, n])
             for i in range(n):
                 for j in range(n):
                     G[i, j] = k(X[:, i], Y[:, j])
