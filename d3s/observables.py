@@ -170,9 +170,9 @@ def allMonomialPowers(d, p):
     All monomials in d dimensions of order up to p.
     '''
     # Example: For d = 3 and p = 2, we obtain
-    #[[ 0  1  0  0  2  1  1  0  0  0]
-    # [ 0  0  1  0  0  1  0  2  1  0]
-    # [ 0  0  0  1  0  0  1  0  1  2]]
+    # [[ 0  1  0  0  2  1  1  0  0  0]
+    #  [ 0  0  1  0  0  1  0  2  1  0]
+    #  [ 0  0  0  1  0  0  1  0  1  2]]
     n = nchoosek(p + d, p) # number of monomials
     x = _np.zeros(d) # vector containing powers for the monomials, initially zero
     c = _np.zeros([d, n]) # matrix containing all powers for the monomials

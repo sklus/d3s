@@ -173,6 +173,30 @@ def edmd(X, Y, psi, evs=5, operator='K'):
     d, V = sortEig(A, evs)
     return (d, V)
 
+
+def gedmd(X, Y, Z, psi, evs=5):
+    '''
+    Generator EDMD for the Koopman operator. The matrices X and Y
+    contain the input data. For stochastic systems, Z contains the
+    diffusion term evaluated in all data points X. If the system is
+    deterministic, set Z = None.
+    '''
+    PsiX = psi(X)
+    dPsiY = _np.einsum('ijk,jk->ik', psi.diff(X), Y)
+    if not (Z is None): # stochastic dynamical system
+        n = PsiX.shape[0] # number of basis functions
+        ddPsiX = psi.ddiff(X) # second-order derivatives
+        S = _np.einsum('ijk,ljk->ilk', Z, Z) # sigma \cdot sigma^T
+        for i in range(n):
+            dPsiY[i, :] += 0.5*_np.sum( ddPsiX[i, :, :, :] * S, axis=(0,1) )
+    
+    C_0 = PsiX @ PsiX.transpose()
+    C_1 = PsiX @ dPsiY.transpose()
+    
+    A = _sp.linalg.pinv(C_0) @ C_1
+    return A
+    
+
 def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     '''
     Kernel EDMD for the Koopman or Perron-Frobenius operator. The matrices X and Y

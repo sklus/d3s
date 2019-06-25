@@ -18,10 +18,21 @@ d = X.shape[0]
 p = 2 # maximum order of monomials
 
 psi = observables.monomials(p)
-Xi = algorithms.sindy(X, Y, psi, iterations=1)
+Xi1 = algorithms.sindy(X, Y, psi, iterations=1)
 
 c = observables.allMonomialPowers(d, p)
+n = c.shape[1] # number of functions
 
 #%% output results
 printMatrix(c)
-printMatrix(Xi)
+printMatrix(Xi1)
+
+#%% apply gEDMD
+K = algorithms.gedmd(X, Y, None, psi)
+
+# construct projection onto full-state observable
+B = sp.zeros((10, d))
+for i in range(3):
+    B[i+1, i] = 1
+Xi2 = (K@B).T
+printMatrix(Xi2)
