@@ -39,8 +39,8 @@ printMatrix(K)
 #%% simple dobule-well process
 
 # define domain
-bounds = sp.array([[-2, 2], [-2, 2]])
-boxes = sp.array([30, 30])
+bounds = sp.array([[-2, 2], [-1, 1]])
+boxes = sp.array([40, 20])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
@@ -51,11 +51,12 @@ def sigma(x):
     n = x.shape[1]
     y = np.zeros((2, 2, n))
     y[0, 0, :] = 0.7
-    y[1, 1, :] = 0.7
+    y[0, 1, :] = x[0, :]
+    y[1, 1, :] = 0.5
     return y
 
 # define observables
-order = 3
+order = 4
 psi = observables.monomials(order)
 
 X = Omega.randPerBox(10)
@@ -65,4 +66,16 @@ Z = sigma(X)
 # apply generator EDMD
 K = algorithms.gedmd(X, Y, Z, psi)
 
-printMatrix(K)
+c = observables.allMonomialPowers(2, order)
+printMatrix(c, 'c')
+
+printMatrix(K, 'K')
+
+# compute entries of a evaluated in c
+c = Omega.midpointGrid()
+Psi_c = psi(c)
+b_c = K[:, 1:3].T @Psi_c
+
+a_11 = K[:, 3].T @ Psi_c - 2*b_c[0, :]*c[0, :]
+a_12 = K[:, 4].T @ Psi_c - b_c[0, :]*c[1, :] - b_c[1, :]*c[0, :]
+a_22 = K[:, 5].T @ Psi_c - 2*b_c[1, :]*c[1, :]
