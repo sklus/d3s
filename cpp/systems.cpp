@@ -277,17 +277,17 @@ size_t ChuaCircuit::getDimension() const
 //------------------------------------------------------------------------------
 OrnsteinUhlenbeck::OrnsteinUhlenbeck(double h, size_t nSteps)
     : SDE(d, h, nSteps),
-      alpha_(4), D_(0.25)
+      alpha_(1), beta_(4)
 {}
 
 void OrnsteinUhlenbeck::f(Vector& x, Vector& y)
 {
-    y[0] = -alpha_*D_*x[0];
+    y[0] = -alpha_*x[0];
 }
 
 void OrnsteinUhlenbeck::getSigma(Matrix& sigma)
 {
-    sigma[0][0] = sqrt(2*D_);
+    sigma[0][0] = sqrt(2/beta_);
 }
 
 size_t OrnsteinUhlenbeck::getDimension() const

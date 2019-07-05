@@ -29,7 +29,7 @@ evs = 4 # number of eigenvalues/eigenfunctions to be computed
 PsiC = psi(Omega.midpointGrid()) # observables evaluated at midpoints of the grid
 
 #%% EDMD for Perron-Frobenius operator
-d, V = algorithms.edmd(X, Y, psi, operator='P', evs=evs)
+_, d, V = algorithms.edmd(X, Y, psi, operator='P', evs=evs)
 for i in range(evs):
     plt.figure()
     r = sp.real(V[:,i].transpose() @ PsiC)
@@ -37,7 +37,7 @@ for i in range(evs):
     plt.title('EDMD P, eigenfunction  %d' % i)
 
 #%% EDMD for Koopman operator    
-d, V = algorithms.edmd(X, Y, psi, operator='K', evs=evs)
+_, d, V = algorithms.edmd(X, Y, psi, operator='K', evs=evs)
 for i in range(evs):
     plt.figure()
     r = sp.real(V[:,i].transpose() @ PsiC)

@@ -120,9 +120,45 @@ class gaussians(object):
         self.sigma = sigma
 
     def __call__(self, x):
+        '''
+        Evaluate Gaussians for all data points in x.
+        '''
         c = self.Omega.midpointGrid()
         D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
-        y = _np.exp(-1/(self.sigma**2)*D)
+        y = _np.exp(-1/(2*self.sigma**2)*D)
+        return y
+    
+    def diff(self, x):
+        '''
+        Compute partial derivatives for all data points in x.
+        '''
+        [d, m] = x.shape # d = dimension of state space, m = number of test points
+        n = self.Omega.numBoxes() # number of basis functions
+        c = self.Omega.midpointGrid()
+        D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
+        y = _np.zeros([n, d, m])
+        for i in range(n): # for all Gaussians
+            for j in range(d): # for all dimensions
+                y[i, j, :] =  -2/(2*self.sigma**2) * (x[j, :] - c[j, i]) * _np.exp(-1/(2*self.sigma**2)*D[i, :])
+
+        return y
+    
+    def ddiff(self, x):
+        '''
+        Compute second order derivatives for all data points in x.
+        '''
+        [d, m] = x.shape # d = dimension of state space, m = number of test points
+        n = self.Omega.numBoxes() # number of basis functions
+        c = self.Omega.midpointGrid()
+        D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
+        y = _np.zeros([n, d, d, m])
+        for i in range(n): # for all monomials
+            for j1 in range(d): # for all dimensions
+                for j2 in range(d): # for all dimensions
+                    if j1 == j2:
+                        y[i, j1, j2, :] = ( -2/(2*self.sigma**2) + 4/(4*self.sigma**4) * (x[j1, :] - c[j1, i])**2 ) * _np.exp(-1/(2*self.sigma**2)*D[i, :])
+                    else:
+                        y[i, j1, j2, :] = ( 4/(4*self.sigma**4) * (x[j1, :] - c[j1, i]) * (x[j2, :] - c[j2, i]) ) * _np.exp(-1/(2*self.sigma**2)*D[i, :])
         return y
 
     def __repr__(self):

@@ -101,8 +101,8 @@ class discretization(object):
             matplotlib.pyplot.pcolor(X, Y, Z)
         else:
             fig = matplotlib.pyplot.gcf()
-            # ax = fig.gca(projection='3d')
-            ax = Axes3D(fig)
+            ax = fig.gca(projection='3d')
+            # ax = Axes3D(fig)
             surf = ax.plot_surface(X, Y, Z, cmap=matplotlib.cm.coolwarm)
             ax.set_xlabel('x_1')
             ax.set_ylabel('x_2')

@@ -171,10 +171,10 @@ def edmd(X, Y, psi, evs=5, operator='K'):
 
     A = _sp.linalg.pinv(C_0) @ C_1
     d, V = sortEig(A, evs)
-    return (d, V)
+    return (A, d, V)
 
 
-def gedmd(X, Y, Z, psi, evs=5):
+def gedmd(X, Y, Z, psi, evs=5, operator='K'):
     '''
     Generator EDMD for the Koopman operator. The matrices X and Y
     contain the input data. For stochastic systems, Z contains the
@@ -192,10 +192,14 @@ def gedmd(X, Y, Z, psi, evs=5):
     
     C_0 = PsiX @ PsiX.transpose()
     C_1 = PsiX @ dPsiY.transpose()
-    
+    if operator == 'P': C_1 = C_1.transpose()
+
     A = _sp.linalg.pinv(C_0) @ C_1
-    return A
     
+    d, V = sortEig(A, evs, which='SM')
+    
+    return (A, d, V)
+
 
 def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     '''
@@ -382,7 +386,7 @@ def seba(V, R0=None, maxIter=5000):
 
 
 # auxiliary functions
-def sortEig(A, evs=5):
+def sortEig(A, evs=5, which='LM'):
     '''
     Computes eigenvalues and eigenvectors of A and sorts them in decreasing lexicographic order.
 
@@ -391,7 +395,7 @@ def sortEig(A, evs=5):
     '''
     n = A.shape[0]
     if evs < n:
-        d, V = _sp.sparse.linalg.eigs(A, evs)
+        d, V = _sp.sparse.linalg.eigs(A, evs, which=which)
     else:
         d, V = _sp.linalg.eig(A)
     ind = d.argsort()[::-1] # [::-1] reverses the list of indices

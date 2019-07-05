@@ -29,13 +29,13 @@ evs = 4 # number of eigenfunctions to be computed
 d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
 for i in range(evs):
     plt.figure()
-    plt.scatter(X, V[:, i])
+    plt.scatter(X, np.real(V[:, i]/sp.amax(abs(V[:, i]))))
 
 # Koopman
 d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
 for i in range(evs):
     plt.figure()
-    plt.scatter(X, V[:, i]/sp.amax(abs(V[:, i])))
+    plt.scatter(X, np.real(V[:, i]/sp.amax(abs(V[:, i]))))
 
 #%% quadruple-well problem
 data = sp.io.loadmat('data/quadrupleWell_uniform.mat', squeeze_me=True)
