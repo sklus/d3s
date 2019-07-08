@@ -14,6 +14,60 @@ from d3s.tools import printVector, printMatrix
 
 plt.ion()
 
+#%% Simple deterministic system -------------------------------------------------------------------
+
+# define domain
+bounds = sp.array([[-2, 2], [-2, 2]])
+boxes = sp.array([50, 50])
+Omega = domain.discretization(bounds, boxes)
+
+# define system
+gamma = -0.8
+delta = -0.7
+
+def b(x):
+    return np.array([gamma*x[0, :], delta*(x[1, :] - x[0, :]**2)])
+
+# define observables
+psi = observables.monomials(8)
+
+# generate data
+X = Omega.rand(10000) # generate test points
+Y = b(X)
+
+# apply generator EDMD
+evs = 8 # number of eigenvalues/eigenfunctions to be computed
+K, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
+# printMatrix(K, 'K_gEDMD')
+# printVector(np.real(d), 'd_gEDMD')
+
+V[:, 1] /= V[3, 1]; V[:, 3] /= V[10, 3]; V[:, 4] /= V[6, 4] # normalize eigenvectors for convenience
+for i in range(evs):
+    psi.display(np.real(V[:, i]), 2, 'phi_%d' % (i+1))
+print('')
+
+# system identification
+B = np.zeros((Omega.dimension(), K.shape[0]))
+B[0, 1] = 1
+B[1, 2] = 1
+
+b_c = B @ K.T # coefficients of the identified system
+psi.display(np.real(b_c[0, :]), 2, 'b_1')
+psi.display(np.real(b_c[1, :]), 2, 'b_2')
+print('')
+
+# system identification 2 (using Koopman modes)
+[d, V] = algorithms.sortEig(K, K.shape[0])
+
+W = B @ sp.linalg.inv(V).T
+printMatrix(np.real(W), 'W')
+
+b_c2 = np.vstack((W[0, 2]*d[2]*V[:, 2], W[1, 1]*d[1]*V[:, 1] + W[1, 5]*d[5]*V[:, 5]))
+
+psi.display(np.real(b_c2[0, :]), 2, 'b_1')
+psi.display(np.real(b_c2[1, :]), 2, 'b_2')
+
+
 #%% Ornstein-Uhlenbeck process --------------------------------------------------------------------
 
 # define domain
@@ -39,20 +93,19 @@ f = systems.OrnsteinUhlenbeck(h, int(tau/h))
 # define observables
 psi = observables.monomials(10)
 
-evs = 5 # number of eigenvalues/eigenfunctions to be computed
-X = Omega.rand(10000) # generate test points
-
-# apply generator EDMD
+# generate data
+X = Omega.rand(10000)
 Y1 = b(X)
 Z1 = sigma(X)
+Y2 = f(X) # integration of the SDE, for standard EDMD
 
+# apply generator EDMD
+evs = 5 # number of eigenvalues/eigenfunctions to be computed
 K1, d1, V1 = algorithms.gedmd(X, Y1, Z1, psi, evs=evs, operator='K')
 printMatrix(K1, 'K_gEDMD')
 printVector(np.real(d1), 'd_gEDMD')
 
 # apply standard EDMD
-Y2 = f(X)
-
 K2, d2, V2 = algorithms.edmd(X, Y2, psi, evs=evs, operator='K')
 printVector(1/tau*np.log(np.real(d2)), 'd_EDMD')
 
@@ -91,7 +144,7 @@ plt.plot(c.T, R3.T)
 plt.title('True solution')
 plt.legend([ 'phi_%i'% (i+1) for i in range(evs) ])
 
-#%% Simple dobule-well process --------------------------------------------------------------------
+#%% Dobule-well process ---------------------------------------------------------------------------
 
 # define domain
 bounds = sp.array([[-2, 2], [-1.5, 1.5]])
@@ -113,14 +166,14 @@ def sigma(x):
 # define observables
 order = 10
 psi = observables.monomials(order)
-# psi = observables.gaussians(Omega, 0.5)
 
+# generate data
 X = Omega.randPerBox(200)
 Y = b(X)
 Z = sigma(X)
 
 # apply generator EDMD
-evs = 3
+evs = 3 # number of eigenvalues/eigenfunctions to be computed
 K, d, V = algorithms.gedmd(X, Y, Z, psi, evs=evs, operator='K')
 
 # compute eigenfunctions
@@ -154,3 +207,4 @@ plt.figure(evs+2)
 Omega.plot(a_12, mode='3D')
 plt.figure(evs+3)
 Omega.plot(a_22, mode='3D')
+plt.gca().set_zlim([0, 1])

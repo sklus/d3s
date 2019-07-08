@@ -84,7 +84,46 @@ class monomials(object):
         
     def __repr__(self):
         return 'Monomials of order up to %d.' % self.p
-
+    
+    def display(self, alpha, d, name = None, eps = 1e-6):
+        '''
+        Display the polynomial with coefficients alpha.
+        '''
+        c = allMonomialPowers(d, self.p) # matrix containing all powers for the monomials
+        
+        if name != None: print(name + ' = ', end = '')
+        
+        ind, = _np.where(abs(alpha) > eps)
+        k = ind.shape[0]
+        
+        if k == 0: # no nonzero coefficients
+            print('0')
+            return
+        
+        for i in range(k):
+            if i == 0:
+                print('%.5f' % alpha[ind[i]], end = '')
+            else:
+                if alpha[ind[i]] > 0:
+                    print(' + %.5f' % alpha[ind[i]], end = '')
+                else:
+                    print(' - %.5f' % -alpha[ind[i]], end = '')
+                        
+            self._displayMonomial(c[:, ind[i]])
+        print('')
+        
+    def _displayMonomial(self, p):
+        d = p.shape[0]
+        if _np.all(p == 0):
+            print('1', end = '')
+        else:
+            for j in range(d):
+                if p[j] == 0:
+                    continue;
+                if p[j] == 1:
+                    print(' x_%d' % (j+1), end = '')
+                else:
+                    print(' x_%d^%d' % (j+1, p[j]), end = '')
 
 class indicators(object):
     '''
