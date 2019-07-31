@@ -2,20 +2,14 @@
 #define D3S_SYSTEM_H
 
 #include <vector>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
+#include <random>
+#include <chrono>
 
 #include <boost/python/numpy.hpp>
 
 typedef std::vector<double> Vector;
 typedef std::vector<std::vector<double>> Matrix;
 typedef boost::python::numpy::ndarray ndarray;
-
-typedef boost::mt19937 MersenneTwister;
-typedef boost::normal_distribution<> NormalDistribution;
-typedef boost::variate_generator<MersenneTwister, NormalDistribution> NormalDistributionGenerator;
 
 // forward declarations
 class ODE;
@@ -64,12 +58,13 @@ public:
     void updateNoise(Vector& w);
     
 private:
-    SDE* sde_;                            ///< drift term of SDE
-    NormalDistributionGenerator normrnd_; ///< normally distributed random values
-    const double h_;                      ///< step size of the integrator
-    const double sqrt_h_;                 ///< precomputed square root of h for efficiency
-    const size_t nSteps_;                 ///< number of integration steps
-    Vector mu_;                           ///< temporary vector
+    SDE* sde_;                                        ///< drift term of SDE
+    std::default_random_engine generator_;            ///< random number generator
+    std::normal_distribution<double> distribution_;   ///< normal distribution
+    const double h_;                                  ///< step size of the integrator
+    const double sqrt_h_;                             ///< precomputed square root of h for efficiency
+    const size_t nSteps_;                             ///< number of integration steps
+    Vector mu_;                                       ///< temporary vector
 };
 
 //------------------------------------------------------------------------------

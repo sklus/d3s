@@ -64,8 +64,9 @@ EulerMaruyama::EulerMaruyama(SDE* sde, size_t d, double h, size_t nSteps)
     : sde_(sde),
       h_(h),
       nSteps_(nSteps),
-      normrnd_(MersenneTwister(std::time(0)), NormalDistribution()), // create random number generator with underlying integer random number generator and
-      sqrt_h_(std::sqrt(h_))                                         // normal distribution with mean = 0.0 and sigma = 1.0)
+      generator_(std::chrono::system_clock::now().time_since_epoch().count()),
+      distribution_(0.0, 1.0),
+      sqrt_h_(std::sqrt(h_))
 {
     mu_.resize(d);
 }
@@ -102,7 +103,7 @@ void EulerMaruyama::updateNoise(Vector& w)
 {
     const size_t d = sde_->getDimension();
     for (size_t i = 0; i < d; ++i)
-        w[i] = normrnd_();
+        w[i] = distribution_(generator_);
 }
 
 //------------------------------------------------------------------------------
@@ -591,7 +592,6 @@ size_t DoubleWell6D::getDimension() const
             .def("getDimension", &name::getDimension)      \
             .def("__call__", &name::operator())            \
             .def("getTrajectory", &name::getTrajectory);
-
 
 using boost::python::class_;
 using boost::python::init;
