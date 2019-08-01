@@ -20,7 +20,7 @@ for s in data.keys():
 d1, V1 = algorithms.tica(X, Y)
 d2, V2 = algorithms.amuse(X, Y)
 
-Xn = V1.transpose() @ X
+Xn = V1.T @ X
 
 #%% plot original data set
 for i in range(4):

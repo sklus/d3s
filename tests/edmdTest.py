@@ -32,7 +32,7 @@ PsiC = psi(Omega.midpointGrid()) # observables evaluated at midpoints of the gri
 _, d, V = algorithms.edmd(X, Y, psi, operator='P', evs=evs)
 for i in range(evs):
     plt.figure()
-    r = sp.real(V[:,i].transpose() @ PsiC)
+    r = sp.real(V[:,i].T @ PsiC)
     Omega.plot(r, '3D')
     plt.title('EDMD P, eigenfunction  %d' % i)
 
@@ -40,7 +40,7 @@ for i in range(evs):
 _, d, V = algorithms.edmd(X, Y, psi, operator='K', evs=evs)
 for i in range(evs):
     plt.figure()
-    r = sp.real(V[:,i].transpose() @ PsiC)
+    r = sp.real(V[:,i].T @ PsiC)
     Omega.plot(r, '3D')
     plt.title('EDMD K, eigenfunction %d' % i)
 

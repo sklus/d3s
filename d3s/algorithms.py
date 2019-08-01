@@ -11,7 +11,7 @@ The implementations of the methods
  
     - DMD, TICA, AMUSE
     - Ulam's method
-    - EDMD, kernel EDMD
+    - EDMD, kernel EDMD, generator EDMD
     - SINDy
     - kernel PCA, kernel CCA
     - CMD
@@ -33,11 +33,11 @@ def dmd(X, Y, mode='exact'):
     '''
     U, s, Vt = _sp.linalg.svd(X, full_matrices=False)
     S_inv = _sp.diag(1/s)
-    A = U.transpose() @ Y @ Vt.transpose() @ S_inv
+    A = U.T @ Y @ Vt.T @ S_inv
     d, W = sortEig(A, A.shape[0])
 
     if mode == 'exact':
-        Phi = Y @ Vt.transpose() @ S_inv @ W @ _sp.diag(1/d)
+        Phi = Y @ Vt.T @ S_inv @ W @ _sp.diag(1/d)
     elif mode == 'standard':
         Phi = U @ W
     else:
@@ -101,9 +101,9 @@ def amuse(X, Y, evs=5):
     '''
     U, s, _ = _sp.linalg.svd(X, full_matrices=False)
     S_inv = _sp.diag(1/s)
-    Xp = S_inv @ U.transpose() @ X
-    Yp = S_inv @ U.transpose() @ Y
-    K = Xp @ Yp.transpose()
+    Xp = S_inv @ U.T @ X
+    Yp = S_inv @ U.T @ Y
+    K = Xp @ Yp.T
     d, W = sortEig(K, evs)
     Phi = U @ S_inv @ W
 
@@ -148,7 +148,7 @@ def ulam(X, Y, Omega, evs=5, operator='K'):
         s = A[i, :].sum()
         if s != 0:
             A[i, :] /= s
-    if operator == 'P': A = A.transpose()
+    if operator == 'P': A = A.T
     d, V = sortEig(A, evs)
     return (d, V)
 
@@ -165,9 +165,9 @@ def edmd(X, Y, psi, evs=5, operator='K'):
     '''
     PsiX = psi(X)
     PsiY = psi(Y)
-    C_0 = PsiX @ PsiX.transpose()
-    C_1 = PsiX @ PsiY.transpose()
-    if operator == 'P': C_1 = C_1.transpose()
+    C_0 = PsiX @ PsiX.T
+    C_1 = PsiX @ PsiY.T
+    if operator == 'P': C_1 = C_1.T
 
     A = _sp.linalg.pinv(C_0) @ C_1
     d, V = sortEig(A, evs)
@@ -190,9 +190,9 @@ def gedmd(X, Y, Z, psi, evs=5, operator='K'):
         for i in range(n):
             dPsiY[i, :] += 0.5*_np.sum( ddPsiX[i, :, :, :] * S, axis=(0,1) )
     
-    C_0 = PsiX @ PsiX.transpose()
-    C_1 = PsiX @ dPsiY.transpose()
-    if operator == 'P': C_1 = C_1.transpose()
+    C_0 = PsiX @ PsiX.T
+    C_1 = PsiX @ dPsiY.T
+    if operator == 'P': C_1 = C_1.T
 
     A = _sp.linalg.pinv(C_0) @ C_1
     
@@ -219,7 +219,7 @@ def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
 
     G_0 = _kernels.gramian(X, k)
     G_1 = _kernels.gramian2(X, Y, k)
-    if operator == 'K': G_1 = G_1.transpose()
+    if operator == 'K': G_1 = G_1.T
 
     A = _sp.linalg.pinv(G_0 + epsilon*_sp.eye(n), rcond=1e-15) @ G_1
     d, V = sortEig(A, evs)

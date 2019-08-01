@@ -91,11 +91,11 @@ def gramian(X, k):
     '''Compute Gram matrix for training data X with kernel k.'''
     name = k.__class__.__name__
     if name == 'gaussianKernel':
-        return _np.exp(-distance.squareform(distance.pdist(X.transpose(), 'sqeuclidean'))/(2*k.sigma**2))
+        return _np.exp(-distance.squareform(distance.pdist(X.T, 'sqeuclidean'))/(2*k.sigma**2))
     elif name == 'laplacianKernel':
-        return _np.exp(-distance.squareform(distance.pdist(X.transpose(), 'euclidean'))/k.sigma)
+        return _np.exp(-distance.squareform(distance.pdist(X.T, 'euclidean'))/k.sigma)
     elif name == 'polynomialKernel':
-        return (k.c + X.transpose()@X)**k.p
+        return (k.c + X.T @ X)**k.p
     elif name == 'stringKernel':
         n = len(X)
         # compute weights for normalization
@@ -133,13 +133,13 @@ def gramian2(X, Y, k):
     name = k.__class__.__name__
     if name == 'gaussianKernel':
         #print('Gaussian kernel with sigma = %f.' % k.sigma)
-        return _np.exp(-distance.cdist(X.transpose(), Y.transpose(), 'sqeuclidean')/(2*k.sigma**2))
+        return _np.exp(-distance.cdist(X.T, Y.T, 'sqeuclidean')/(2*k.sigma**2))
     elif name == 'laplacianKernel':
         #print('Laplacian kernel with sigma = %f.' % k.sigma)
-        return _np.exp(-distance.cdist(X.transpose(), Y.transpose(), 'euclidean')/k.sigma)
+        return _np.exp(-distance.cdist(X.T, Y.T, 'euclidean')/k.sigma)
     elif name == 'polynomialKernel':
         #print('Polynomial kernel with degree = %f and c = %f.' % (k.p, k.c))
-        return (k.c + X.transpose()@Y)**k.p
+        return (k.c + X.T@Y)**k.p
     elif name == 'stringKernel':
         n = len(X)
         d = _np.zeros([n, 2])

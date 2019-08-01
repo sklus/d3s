@@ -163,7 +163,7 @@ class gaussians(object):
         Evaluate Gaussians for all data points in x.
         '''
         c = self.Omega.midpointGrid()
-        D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
+        D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.exp(-1/(2*self.sigma**2)*D)
         return y
     
@@ -174,7 +174,7 @@ class gaussians(object):
         [d, m] = x.shape # d = dimension of state space, m = number of test points
         n = self.Omega.numBoxes() # number of basis functions
         c = self.Omega.midpointGrid()
-        D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
+        D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.zeros([n, d, m])
         for i in range(n): # for all Gaussians
             for j in range(d): # for all dimensions
@@ -189,7 +189,7 @@ class gaussians(object):
         [d, m] = x.shape # d = dimension of state space, m = number of test points
         n = self.Omega.numBoxes() # number of basis functions
         c = self.Omega.midpointGrid()
-        D = distance.cdist(c.transpose(), x.transpose(), 'sqeuclidean')
+        D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.zeros([n, d, d, m])
         for i in range(n): # for all monomials
             for j1 in range(d): # for all dimensions
