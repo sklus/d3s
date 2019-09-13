@@ -1,21 +1,6 @@
 #include "systems.h"
 
 //------------------------------------------------------------------------------
-// Helper class for accessing numpy matrices
-//------------------------------------------------------------------------------
-NumpyWrapper::NumpyWrapper(ndarray const& x)
-    : shape {x.shape(0), x.shape(1)},
-        strides {x.strides(0)/sizeof(double), x.strides(1)/sizeof(double)}
-{
-    data = reinterpret_cast<double*>(x.get_data());
-}
-
-double& NumpyWrapper::operator()(size_t i, size_t j)
-{
-    return data[strides[0]*i + strides[1]*j];
-}
-
-//------------------------------------------------------------------------------
 // Runge-Kutta integrator for ordinary differential equations
 //------------------------------------------------------------------------------
 RungeKutta::RungeKutta(ODE* ode, size_t d, double h, size_t nSteps)
@@ -109,55 +94,62 @@ void EulerMaruyama::updateNoise(Vector& w)
 //------------------------------------------------------------------------------
 // Virtual base class for all dynamical systems
 //------------------------------------------------------------------------------
-ndarray DynamicalSystemInterface::operator()(ndarray const& x)
+py::array_t<double> DynamicalSystemInterface::operator()(py::array_t<double> x)
 {
-    NumpyWrapper xw(x); // wrapper for x matrix
-    const size_t d = xw.shape[0];
-    const size_t m = xw.shape[1];
+    auto xBuf = x.request();
+    double* xPtr = reinterpret_cast<double*>(xBuf.ptr);
+    const size_t d = xBuf.shape[0]; // dimension of the state space
+    const size_t m = xBuf.shape[1]; // number of snapshots
     
-    ndarray y = zeros(x.get_nd(), x.get_shape(), boost::python::numpy::dtype::get_builtin<double>()); // create output matrix y
-    NumpyWrapper yw(y);
+    py::array_t<double> y = py::array_t<double>(xBuf.size);
+    auto yBuf = y.request();
+    double* yPtr = reinterpret_cast<double*>(yBuf.ptr);
     
     Vector xi(d), yi(d);
     for (size_t i = 0; i < m; ++i) // for all test points
     {
         for (size_t k = 0; k < d; ++k) // copy new test point into x vector
-            xi[k] = xw(k, i);
+            xi[k] = xPtr[k*m + i];
         
         eval(xi, yi); // evaluate dynamical system
         
         for (size_t k = 0; k < d; ++k) // copy result into y vector
-            yw(k, i) = yi[k];
+            yPtr[k*m + i] = yi[k];
     }
     
+    y.resize({d, m});
     return y;
 }
 
-ndarray DynamicalSystemInterface::getTrajectory(ndarray const& x, size_t length)
+py::array_t<double> DynamicalSystemInterface::getTrajectory(py::array_t<double> x, size_t length)
 {
-    NumpyWrapper xw(x); // wrapper for x matrix
-    const size_t d = xw.shape[0];
-    const size_t m = xw.shape[1];
+    auto xBuf = x.request();
+    double* xPtr = reinterpret_cast<double*>(xBuf.ptr);
+    const size_t d = xBuf.shape[0];
+    const size_t m = xBuf.shape[1];
     
-    boost::python::tuple shape = boost::python::make_tuple(d, length);
-    ndarray y = zeros(shape, boost::python::numpy::dtype::get_builtin<double>());
-    NumpyWrapper yw(y);
+    assert(m == 1);
+    
+    py::array_t<double> y = py::array_t<double>(d*length);
+    auto yBuf = y.request();
+    double* yPtr = reinterpret_cast<double*>(yBuf.ptr);
     
     for (size_t k = 0; k < d; ++k) // copy initial condition
-        yw(k, 0) = xw(k, 0);
+        yPtr[k*length] = xPtr[k];
     
     Vector xi(d), yi(d);
     for (size_t i = 1; i < length; ++i)
     {
         for (size_t k = 0; k < d; ++k) // copy new test point into x vector
-            xi[k] = yw(k, i-1);
+            xi[k] = yPtr[k*length + (i-1)];
         
         eval(xi, yi); // evaluate dynamical system
         
         for (size_t k = 0; k < d; ++k) // copy result into y vector
-            yw(k, i) = yi[k];
+            yPtr[k*length + i] = yi[k];
     }
     
+    y.resize({d, length});
     return y;
 }
 
@@ -582,24 +574,21 @@ size_t DoubleWell6D::getDimension() const
 //------------------------------------------------------------------------------
 
 #define S(x) #x
-#define EXPORT_DISC(name)                                  \
-    class_<name>(S(name))                                  \
-            .def("getDimension", &name::getDimension)      \
-            .def("__call__", &name::operator())            \
-            .def("getTrajectory", &name::getTrajectory);
-#define EXPORT_CONT(name)                                  \
-    class_<name>(S(name), init<double, size_t>())          \
-            .def("getDimension", &name::getDimension)      \
-            .def("__call__", &name::operator())            \
-            .def("getTrajectory", &name::getTrajectory);
+#define EXPORT_DISC(name)                               \
+    py::class_<name>(m, S(name))                        \
+        .def(py::init<>())                              \
+        .def("getDimension", &name::getDimension)       \
+        .def("__call__", &name::operator())             \
+        .def("getTrajectory", &name::getTrajectory);
+#define EXPORT_CONT(name)                               \
+    py::class_<name>(m, S(name))                        \
+        .def(py::init<double, size_t>())                \
+        .def("getDimension", &name::getDimension)       \
+        .def("__call__", &name::operator())             \
+        .def("getTrajectory", &name::getTrajectory);
 
-using boost::python::class_;
-using boost::python::init;
-
-BOOST_PYTHON_MODULE(systems)
+PYBIND11_MODULE(systems, m)
 {
-    boost::python::numpy::initialize();
-    
     EXPORT_DISC(HenonMap);
     EXPORT_CONT(SimpleODE);
     EXPORT_CONT(ABCFlow);

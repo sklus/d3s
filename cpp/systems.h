@@ -5,29 +5,18 @@
 #include <random>
 #include <chrono>
 
-#include <boost/python/numpy.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+
+namespace py = pybind11;
 
 typedef std::vector<double> Vector;
-typedef std::vector<std::vector<double>> Matrix;
-typedef boost::python::numpy::ndarray ndarray;
+typedef std::vector<Vector> Matrix;
 
 // forward declarations
 class ODE;
 class SDE;
-
-//------------------------------------------------------------------------------
-// Helper class for accessing numpy matrices
-//------------------------------------------------------------------------------
-class NumpyWrapper
-{
-public:
-    NumpyWrapper(ndarray const& x);
-    double& operator()(size_t i, size_t j);
-    
-    Py_intptr_t shape[2]; ///< number of rows and columns
-    size_t strides[2];    ///< strides in row and column directions
-    double* data;         ///< pointer to raw data
-};
 
 //------------------------------------------------------------------------------
 // Runge-Kutta integrator for ordinary differential equations
@@ -75,8 +64,8 @@ class DynamicalSystemInterface
 public:
     virtual ~DynamicalSystemInterface() {};
     
-    virtual ndarray operator()(ndarray const& x); ///< Evaluates the dynamical system for all data points contained in x = [x_1, x_2, ..., x_m].
-    virtual ndarray getTrajectory(ndarray const& x, size_t length); ///< Generate a trajectory for one data point x.
+    virtual py::array_t<double> operator()(py::array_t<double> x); ///< Evaluates the dynamical system for all data points contained in x = [x_1, x_2, ..., x_m].
+    virtual py::array_t<double> getTrajectory(py::array_t<double> x, size_t length); ///< Generate a trajectory for one data point x.
     virtual void eval(Vector& x, Vector& y) = 0; ///< Evaluates the dynamical system for one test point x. Must be implemented by derived classes.
     virtual size_t getDimension() const = 0; ///< Returns the number of dimensions d of the dynamical system.
 };
