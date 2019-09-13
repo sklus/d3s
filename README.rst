@@ -33,7 +33,7 @@ The algorithms are implemented based on the following publications:
 Develop/Install
 ---------------
 
-The ODE/SDE solvers required by some examples to generate trajectory data are implemented in C++. In order to create Python bindings, first install pybind11, then go to the cpp directory and compile the code by executing the following command:::
+The ODE/SDE solvers required by some examples to generate trajectory data are implemented in C++. In order to create Python bindings, first install pybind11, then go to the cpp directory and compile the code by executing the following command::
 
     Linux: g++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` systems.cpp -o ../d3s/systems`python3-config --extension-suffix`
     MAC:   c++ -O3 -Wall -shared -std=c++11 -undefined dynamic_lookup `python3 -m pybind11 --includes` systems.cpp -o ../d3s/systems`python3-config --extension-suffix`
