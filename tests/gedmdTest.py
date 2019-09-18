@@ -32,14 +32,14 @@ def b(x):
 psi = observables.monomials(8)
 
 # generate data
-X = Omega.rand(10000) # generate test points
+X = Omega.rand(1000) # generate test points
 Y = b(X)
 
 # apply generator EDMD
 evs = 8 # number of eigenvalues/eigenfunctions to be computed
 K, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
 # printMatrix(K, 'K_gEDMD')
-# printVector(np.real(d), 'd_gEDMD')
+printVector(np.real(d), 'd_gEDMD')
 
 V[:, 1] /= V[3, 1]; V[:, 3] /= V[10, 3]; V[:, 4] /= V[6, 4] # normalize eigenvectors for convenience
 for i in range(evs):
@@ -47,26 +47,66 @@ for i in range(evs):
 print('')
 
 # system identification
-B = np.zeros((Omega.dimension(), K.shape[0]))
-B[0, 1] = 1
-B[1, 2] = 1
+B = np.zeros((K.shape[0], Omega.dimension()))
+B[1, 0] = 1
+B[2, 1] = 1
 
-b_c = B @ K.T # coefficients of the identified system
-psi.display(np.real(b_c[0, :]), 2, 'b_1')
-psi.display(np.real(b_c[1, :]), 2, 'b_2')
+b_c = K @ B # coefficients of the identified system
+psi.display(np.real(b_c[:, 0]), 2, 'b_1')
+psi.display(np.real(b_c[:, 1]), 2, 'b_2')
 print('')
 
 # system identification 2 (using Koopman modes)
 [d, V] = algorithms.sortEig(K, K.shape[0])
 
-W = B @ sp.linalg.inv(V).T
+W = B.T @ sp.linalg.inv(V).T
 printMatrix(np.real(W), 'W')
 
-b_c2 = np.vstack((W[0, 2]*d[2]*V[:, 2], W[1, 1]*d[1]*V[:, 1] + W[1, 5]*d[5]*V[:, 5]))
+psi.display( np.real( W[0, 2]*d[2]*V[:, 2] ), 2, 'b_1')
+psi.display( np.real( W[1, 1]*d[1]*V[:, 1] + W[1, 5]*d[5]*V[:, 5]) , 2, 'b_2')
 
-psi.display(np.real(b_c2[0, :]), 2, 'b_1')
-psi.display(np.real(b_c2[1, :]), 2, 'b_2')
+#%% pendulum conservation laws --------------------------------------------------------------------
 
+# define domain
+bounds = sp.array([[-2, 2], [-2, 2]])
+boxes = sp.array([50, 50])
+Omega = domain.discretization(bounds, boxes)
+
+# define system
+def b(x):
+    return np.vstack((x[1, :], -np.sin(x[0, :])))
+
+# define observables
+class poltrig(object):
+    def __init__(self):
+        self.p = observables.monomials(2)
+    
+    def __call__(self, x):
+        return np.vstack((self.p(x), np.sin(x[0, :]), np.cos(x[0, :]), np.sin(x[1, :]), np.cos(x[1, :])))
+    
+    def diff(self, x):
+        dp = self.p.diff(x)
+        (n1, n2, n3) = dp.shape
+        y = np.zeros((n1+4, n2, n3))
+        y[:-4, :, :] = dp
+        y[-4, 0, :] =  np.cos(x[0, :])
+        y[-3, 0, :] = -np.sin(x[0, :])
+        y[-2, 1, :] =  np.cos(x[1, :])
+        y[-1, 1, :] = -np.sin(x[1, :])
+        return y
+
+psi = poltrig()
+
+# generate data
+X = Omega.rand(1000) # generate test points
+Y = b(X)
+
+# apply generator EDMD
+evs = 5 # number of eigenvalues/eigenfunctions to be computed
+K, d, V = algorithms.gedmd(X, Y, None, psi, evs=evs, operator='K')
+printMatrix(K, 'K_gEDMD')
+printVector(np.real(d), 'd_gEDMD')
+printMatrix(np.real(V), 'V')
 
 #%% Ornstein-Uhlenbeck process --------------------------------------------------------------------
 
@@ -168,24 +208,23 @@ order = 10
 psi = observables.monomials(order)
 
 # generate data
-X = Omega.randPerBox(200)
+X = Omega.randPerBox(100)
 Y = b(X)
 Z = sigma(X)
 
 # apply generator EDMD
 evs = 3 # number of eigenvalues/eigenfunctions to be computed
 K, d, V = algorithms.gedmd(X, Y, Z, psi, evs=evs, operator='K')
-
-# compute eigenfunctions
 printVector(np.real(d), 'd')
 
+# plot eigenfunctions
 c = Omega.midpointGrid()
 Psi_c = psi(c)
 for i in range(evs):
     plt.figure(i+1);
     plt.clf()
     Omega.plot(np.real( V[:, i].T @ Psi_c ), mode='3D')
-
+    
 #%% system identification
 order = 4 # reduce order of monomials
 p = observables.allMonomialPowers(2, order)
@@ -208,3 +247,21 @@ Omega.plot(a_12, mode='3D')
 plt.figure(evs+3)
 Omega.plot(a_22, mode='3D')
 plt.gca().set_zlim([0, 1])
+
+#%% Perron-Frobenius generator
+
+# define observables
+psi = observables.gaussians(Omega, 0.2)
+
+# apply generator EDMD
+evs = 3 # number of eigenvalues/eigenfunctions to be computed
+K, d, V = algorithms.gedmd(X, Y, Z, psi, evs=evs, operator='P')
+printVector(np.real(d), 'd')
+
+# plot eigenfunctions
+c = Omega.midpointGrid()
+Psi_c = psi(c)
+for i in range(evs):
+    plt.figure(i+1);
+    plt.clf()
+    Omega.plot(np.real( V[:, i].T @ Psi_c ), mode='3D')
