@@ -184,7 +184,7 @@ plt.plot(c.T, R3.T)
 plt.title('True solution')
 plt.legend([ 'phi_%i'% (i+1) for i in range(evs) ])
 
-#%% Dobule-well process ---------------------------------------------------------------------------
+#%% Double-well process ---------------------------------------------------------------------------
 
 # define domain
 bounds = sp.array([[-2, 2], [-1.5, 1.5]])

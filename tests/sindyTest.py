@@ -28,7 +28,7 @@ printMatrix(c)
 printMatrix(Xi1)
 
 #%% apply gEDMD
-K = algorithms.gedmd(X, Y, None, psi)
+K, _, _ = algorithms.gedmd(X, Y, None, psi)
 
 # construct projection onto full-state observable
 B = sp.zeros((10, d))
