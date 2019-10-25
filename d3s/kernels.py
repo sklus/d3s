@@ -10,6 +10,10 @@ class gaussianKernel(object):
         self.sigma = sigma
     def __call__(self, x, y):
         return _np.exp(-_np.linalg.norm(x-y)**2/(2*self.sigma**2))
+    def diff(self, x, y):
+        return -1/self.sigma**2*(x - y)*self(x, y)
+    def ddiff(self, x, y):
+        return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(x.shape[0])) * self(x, y) 
     def __repr__(self):
         return 'Gaussian kernel with bandwidth sigma = %f.' % self.sigma
 
@@ -30,7 +34,11 @@ class polynomialKernel(object):
         self.p = p
         self.c = c
     def __call__(self, x, y):
-        return (self.c + x@y)**self.p
+        return (self.c + x.T @ y)**self.p
+    def diff(self, x, y):
+        return self.p*(self.c + x.T @ y)**(self.p-1)*y;
+    def ddiff(self, x, y):
+        return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.outer(y, y);
     def __repr__(self):
         return 'Polynomial kernel with degree p = %f and inhomogeneity c = %f.' % (self.p, self.c)
 

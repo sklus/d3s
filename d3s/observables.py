@@ -191,7 +191,7 @@ class gaussians(object):
         c = self.Omega.midpointGrid()
         D = distance.cdist(c.T, x.T, 'sqeuclidean')
         y = _np.zeros([n, d, d, m])
-        for i in range(n): # for all monomials
+        for i in range(n): # for all Gaussians
             for j1 in range(d): # for all dimensions
                 for j2 in range(d): # for all dimensions
                     if j1 == j2:

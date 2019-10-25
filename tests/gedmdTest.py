@@ -123,7 +123,7 @@ def b(x):
     return -alpha*x
 
 def sigma(x):
-    return np.sqrt(2/beta)*np.ones((1, 1, X.shape[1]))
+    return np.sqrt(2/beta)*np.ones((1, 1, x.shape[1]))
 
 # Euler-Maruyama integrator for Ornstein-Uhlenbeck (for comparison with EDMD; make sure the same parameters are used)
 h = 0.001
@@ -184,7 +184,7 @@ plt.plot(c.T, R3.T)
 plt.title('True solution')
 plt.legend([ 'phi_%i'% (i+1) for i in range(evs) ])
 
-#%% Double-well process ---------------------------------------------------------------------------
+#%% Double-well system ---------------------------------------------------------------------------
 
 # define domain
 bounds = sp.array([[-2, 2], [-1.5, 1.5]])
