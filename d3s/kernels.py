@@ -11,7 +11,7 @@ class gaussianKernel(object):
     def __call__(self, x, y):
         return _np.exp(-_np.linalg.norm(x-y)**2/(2*self.sigma**2))
     def diff(self, x, y):
-        return -1/self.sigma**2*(x - y)*self(x, y)
+        return -1/self.sigma**2*(x - y) * self(x, y)
     def ddiff(self, x, y):
         return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(x.shape[0])) * self(x, y) 
     def __repr__(self):
