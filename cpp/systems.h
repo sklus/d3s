@@ -188,7 +188,7 @@ private:
     double alpha_;
     double beta_;
 };
- 
+
 //------------------------------------------------------------------------------
 // Simple triple-well in one dimension, use interval [0, 6]
 //------------------------------------------------------------------------------
@@ -332,6 +332,34 @@ public:
     size_t getDimension() const;
     
     static const size_t d = 6;
+};
+
+//------------------------------------------------------------------------------
+// Hydrogen
+//------------------------------------------------------------------------------
+class Hydrogen : public SDE
+{
+public:
+    Hydrogen(double h = 1e-3, size_t nSteps = 10000);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+    
+    static const size_t d = 3;
+};
+
+//------------------------------------------------------------------------------
+// Poeschl–Teller potential
+//------------------------------------------------------------------------------
+class PoeschlTeller : public SDE
+{
+public:
+    PoeschlTeller(double h = 1e-3, size_t nSteps = 1000);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+    
+    static const size_t d = 1;
 };
 
 #endif // D3S_SYSTEM_H

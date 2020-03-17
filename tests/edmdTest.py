@@ -12,8 +12,8 @@ import d3s.systems as systems
 #%% create system
 
 # define domain
-bounds = sp.array([[-2, 2], [-2, 2]])
-boxes = sp.array([30, 30])
+bounds = np.array([[-2, 2], [-2, 2]])
+boxes = np.array([30, 30])
 Omega = domain.discretization(bounds, boxes)
 
 # generate training data
@@ -32,7 +32,7 @@ PsiC = psi(Omega.midpointGrid()) # observables evaluated at midpoints of the gri
 _, d, V = algorithms.edmd(X, Y, psi, operator='P', evs=evs)
 for i in range(evs):
     plt.figure()
-    r = sp.real(V[:,i].T @ PsiC)
+    r = np.real(V[:,i].T @ PsiC)
     Omega.plot(r, '3D')
     plt.title('EDMD P, eigenfunction  %d' % i)
 
@@ -40,7 +40,7 @@ for i in range(evs):
 _, d, V = algorithms.edmd(X, Y, psi, operator='K', evs=evs)
 for i in range(evs):
     plt.figure()
-    r = sp.real(V[:,i].T @ PsiC)
+    r = np.real(V[:,i].T @ PsiC)
     Omega.plot(r, '3D')
     plt.title('EDMD K, eigenfunction %d' % i)
 
@@ -48,7 +48,7 @@ for i in range(evs):
 d, V = algorithms.ulam(X, Y, Omega, operator='P', evs=evs)
 for i in range(evs):
     plt.figure()
-    r = sp.real(V[:,i])
+    r = np.real(V[:,i])
     Omega.plot(r, '3D')
     plt.title('Ulam P, eigenfunction %d' % i)
 
@@ -56,6 +56,6 @@ for i in range(evs):
 d, V = algorithms.ulam(X, Y, Omega, operator='K', evs=evs)
 for i in range(evs):
     plt.figure()
-    r = sp.real(V[:,i])
+    r = np.real(V[:,i])
     Omega.plot(r, '3D')
     plt.title('Ulam K, eigenfunction %d' % i)

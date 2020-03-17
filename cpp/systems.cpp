@@ -231,9 +231,9 @@ ABCFlow::ABCFlow(double h, size_t nSteps)
 
 void ABCFlow::f(Vector& x, Vector& y)
 {
-    y[0] = a_*sin(2*M_PI*x[2]) + c_*cos(2*M_PI*x[1]);
-    y[1] = b_*sin(2*M_PI*x[0]) + a_*cos(2*M_PI*x[2]);
-    y[2] = c_*sin(2*M_PI*x[1]) + b_*cos(2*M_PI*x[0]);
+    y[0] = a_*sin(x[2]) + c_*cos(x[1]);
+    y[1] = b_*sin(x[0]) + a_*cos(x[2]);
+    y[2] = c_*sin(x[1]) + b_*cos(x[0]);
 }
 
 size_t ABCFlow::getDimension() const
@@ -468,7 +468,7 @@ void FastSlowSDE::f(Vector& x, Vector& y)
 
 void FastSlowSDE::getSigma(Matrix& sigma)
 {
-    sigma[0][0] = 0; sigma[0][1] = 0;
+    sigma[0][0] = 0; sigma[0][1] = 0.0;
     sigma[1][0] = 0; sigma[1][1] = std::sqrt(0.113)/epsilon_;
 }
 
@@ -570,6 +570,58 @@ size_t DoubleWell6D::getDimension() const
 }
 
 //------------------------------------------------------------------------------
+// Hydrogen
+//------------------------------------------------------------------------------
+Hydrogen::Hydrogen(double h, size_t nSteps)
+    : SDE(d, h, nSteps)
+{}
+
+void Hydrogen::f(Vector& x, Vector& y)
+{
+    // m = e = h = epsilon_0 = 1
+    const double a_0 = 4*M_PI;
+    double r = sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
+    y[0] = -1/(a_0*r)*x[0];
+    y[1] = -1/(a_0*r)*x[1];
+    y[2] = -1/(a_0*r)*x[2];
+}
+
+void Hydrogen::getSigma(Matrix& sigma)
+{
+    for (size_t i = 0; i < d; ++i)
+        for (size_t j = 0; j < d; ++j)
+            sigma[i][j] = (i == j ? 1.0 : 0.0);
+}
+
+size_t Hydrogen::getDimension() const
+{
+    return d;
+}
+
+//------------------------------------------------------------------------------
+// Poeschl–Teller potential
+//------------------------------------------------------------------------------
+PoeschlTeller::PoeschlTeller(double h, size_t nSteps)
+    : SDE(d, h, nSteps)
+{}
+
+void PoeschlTeller::f(Vector& x, Vector& y)
+{
+    const double l = 3.0;
+    y[0] = -l*tanh(x[0]);
+}
+
+void PoeschlTeller::getSigma(Matrix& sigma)
+{
+    sigma[0][0] = 1.0;
+}
+
+size_t PoeschlTeller::getDimension() const
+{
+    return d;
+}
+
+//------------------------------------------------------------------------------
 // class export to python
 //------------------------------------------------------------------------------
 
@@ -604,4 +656,6 @@ PYBIND11_MODULE(systems, m)
     EXPORT_CONT(DoubleWell3D);
     EXPORT_CONT(TripleWell3D);
     EXPORT_CONT(DoubleWell6D);
+    EXPORT_CONT(Hydrogen);
+    EXPORT_CONT(PoeschlTeller);
 }

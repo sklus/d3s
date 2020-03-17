@@ -221,7 +221,7 @@ def kedmd(X, Y, k, epsilon=0, evs=5, operator='P'):
     G_1 = _kernels.gramian2(X, Y, k)
     if operator == 'K': G_1 = G_1.T
 
-    A = _sp.linalg.pinv(G_0 + epsilon*_sp.eye(n), rcond=1e-15) @ G_1
+    A = _sp.linalg.pinv(G_0 + epsilon*_np.eye(n), rcond=1e-15) @ G_1
     d, V = sortEig(A, evs)
     if operator == 'K': V = G_0 @ V
     return (d, V)
@@ -261,7 +261,7 @@ def kpca(X, k, evs=5):
     
     # center Gram matrix
     n = X.shape[1]
-    N = _sp.eye(n) - 1/n*_sp.ones((n, n))
+    N = _np.eye(n) - 1/n*_sp.ones((n, n))
     G = N @ G @ N    
     d, V = sortEig(G, evs)
     return (d, V)
@@ -283,7 +283,7 @@ def kcca(X, Y, k, evs=5, epsilon=1e-6):
     
     # center Gram matrices
     n = X.shape[1]
-    I = _sp.eye(n)
+    I = _np.eye(n)
     N = I - 1/n*_sp.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
@@ -310,7 +310,7 @@ def cmd(X, Y, evs=5, epsilon=1e-6):
     
     # center Gram matrices
     n = X.shape[1]
-    I = _sp.eye(n)
+    I = _np.eye(n)
     N = I - 1/n*_sp.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
@@ -349,7 +349,7 @@ def seba(V, R0=None, maxIter=5000):
     mu = 0.99/_sp.sqrt(n)
     
     if R0 == None:
-        R0 = _sp.eye(r)
+        R0 = _np.eye(r)
     else:
         R0, _ = _sp.linalg.polar(R0)
     
