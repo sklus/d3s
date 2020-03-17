@@ -17,8 +17,8 @@ plt.ion()
 #%% Simple deterministic system -------------------------------------------------------------------
 
 # define domain
-bounds = sp.array([[-2, 2], [-2, 2]])
-boxes = sp.array([50, 50])
+bounds = np.array([[-2, 2], [-2, 2]])
+boxes = np.array([50, 50])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
@@ -68,8 +68,8 @@ psi.display( np.real( W[1, 1]*d[1]*V[:, 1] + W[1, 5]*d[5]*V[:, 5]) , 2, 'b_2')
 #%% pendulum conservation laws --------------------------------------------------------------------
 
 # define domain
-bounds = sp.array([[-2, 2], [-2, 2]])
-boxes = sp.array([50, 50])
+bounds = np.array([[-2, 2], [-2, 2]])
+boxes = np.array([50, 50])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
@@ -111,8 +111,8 @@ printMatrix(np.real(V), 'V')
 #%% Ornstein-Uhlenbeck process --------------------------------------------------------------------
 
 # define domain
-bounds = sp.array([[-2, 2]])
-boxes = sp.array([1000])
+bounds = np.array([[-2, 2]])
+boxes = np.array([1000])
 Omega = domain.discretization(bounds, boxes)
 
 # define system
@@ -187,8 +187,8 @@ plt.legend([ 'phi_%i'% (i+1) for i in range(evs) ])
 #%% Double-well system ---------------------------------------------------------------------------
 
 # define domain
-bounds = sp.array([[-2, 2], [-1.5, 1.5]])
-boxes = sp.array([20, 15])
+bounds = np.array([[-2, 2], [-1.5, 1.5]])
+boxes = np.array([20, 15])
 Omega = domain.discretization(bounds, boxes)
 
 # define system

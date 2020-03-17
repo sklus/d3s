@@ -56,7 +56,7 @@ for s in data.keys():
 evs = 10 # number of eigenfunctions to be computed
 d, V = algorithms.kcca(X, Y, k, evs, epsilon=1e-2)
 
-#%% plot eigenvectors
+#%% plot eigenvalues
 plt.figure()
 plt.plot(d, 'o')
 plt.show()

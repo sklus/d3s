@@ -4,9 +4,6 @@ import scipy as sp
 import scipy.io
 import matplotlib.pyplot as plt
 import d3s.algorithms as algorithms
-import d3s.observables as observables
-
-from d3s.tools import printVector, printMatrix
 
 plt.ion()
 

@@ -13,13 +13,13 @@ import d3s.systems as systems
 plt.ion()
 
 #%% Ornstein-Uhlenbeck process
-Omega = domain.discretization(sp.array([[-2, 2]]), sp.array([50]))
+Omega = domain.discretization(np.array([[-2, 2]]), np.array([50]))
 
 f = systems.OrnsteinUhlenbeck(0.001, 500)
 X = Omega.randPerBox(100)
 Y = f(X)
 
-sigma = sp.sqrt(0.3)
+sigma = np.sqrt(0.3)
 epsilon = 0.1
 k = kernels.gaussianKernel(sigma)
 
@@ -29,13 +29,13 @@ evs = 4 # number of eigenfunctions to be computed
 d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
 for i in range(evs):
     plt.figure()
-    plt.scatter(X, np.real(V[:, i]/sp.amax(abs(V[:, i]))))
+    plt.scatter(X, np.real(V[:, i]/np.amax(abs(V[:, i]))))
 
 # Koopman
 d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
 for i in range(evs):
     plt.figure()
-    plt.scatter(X, np.real(V[:, i]/sp.amax(abs(V[:, i]))))
+    plt.scatter(X, np.real(V[:, i]/np.amax(abs(V[:, i]))))
 
 #%% quadruple-well problem
 data = sp.io.loadmat('data/quadrupleWell_uniform.mat', squeeze_me=True)
@@ -48,7 +48,7 @@ Omega = domain.discretization(bounds, boxes)
 evs = 4 # number of eigenfunctions to be computed
 
 # define kernel and regularization parameter
-sigma = sp.sqrt(2)
+sigma = np.sqrt(2)
 epsilon = 0
 k = kernels.gaussianKernel(sigma)
 
@@ -56,7 +56,7 @@ k = kernels.gaussianKernel(sigma)
 d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='P')
 for i in range(evs):
     plt.figure()
-    Omega.plot(sp.real(V[:, i]))
+    Omega.plot(np.real(V[:, i]))
 
 # change bandwidth of kernel and regularization parameter
 k.sigma = 0.5
@@ -66,7 +66,7 @@ epsilon = 0.1
 d, V = algorithms.kedmd(X, Y, k, epsilon=epsilon, evs=evs, operator='K')
 for i in range(evs):
     plt.figure()
-    Omega.plot(sp.real(V[:, i]))
+    Omega.plot(np.real(V[:, i]))
 
 #%% string kernel example
 words = ('computer', 'browser', 'tablet', 'internet', 'e-mail',
@@ -79,7 +79,7 @@ X = data[0:-1]
 Y = data[1:]
 
 k_s = kernels.stringKernel()
-k = lambda x, y : sp.exp(-k_s(x, y)**2/0.4)
+k = lambda x, y : np.exp(-k_s(x, y)**2/0.4)
 
 d, V = algorithms.kedmd(X, Y, k, epsilon=0.1, evs=4, operator='P')
 

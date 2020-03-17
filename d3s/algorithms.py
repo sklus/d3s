@@ -120,7 +120,8 @@ def tica(X, Y, evs=5):
     :param evs: number of eigenvalues/eigenvectors
     :return:    eigenvalues d and corresponding eigenvectors V containing the coefficients for the eigenfunctions
     '''
-    return edmd(X, Y, _observables.identity, evs=evs)
+    _, d, V = edmd(X, Y, _observables.identity, evs=evs)
+    return (d, V)
 
 
 def ulam(X, Y, Omega, evs=5, operator='K'):

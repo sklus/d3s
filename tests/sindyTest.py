@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import numpy as np
 import scipy as sp
 import scipy.io
 import d3s.algorithms as algorithms
@@ -31,7 +32,7 @@ printMatrix(Xi1)
 K, _, _ = algorithms.gedmd(X, Y, None, psi)
 
 # construct projection onto full-state observable
-B = sp.zeros((10, d))
+B = np.zeros((10, d))
 for i in range(3):
     B[i+1, i] = 1
 Xi2 = (K@B).T

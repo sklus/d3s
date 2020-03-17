@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import scipy as sp
-import scipy.io
+import numpy as np
 import matplotlib.pyplot as plt
 
 import d3s.domain as domain

@@ -28,12 +28,12 @@ rho, Xi, Eta = algorithms.cmd(X, Y, evs=5, epsilon=10)
 #%% plot CMD modes
 for i in range(3):
     plt.figure()
-    xi = sp.real(Xi[:, i].reshape(nx, ny))
+    xi = np.real(Xi[:, i].reshape(nx, ny))
     plt.imshow(xi)
     plt.title('xi_%i' % (i+1))
     
     plt.figure()
-    eta = sp.real(Eta[:, i].reshape(nx, ny))
+    eta = np.real(Eta[:, i].reshape(nx, ny))
     plt.imshow(eta)
     plt.title('eta_%i' % (i+1))
     
