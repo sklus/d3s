@@ -362,6 +362,30 @@ size_t QuadrupleWell2D::getDimension() const
 }
 
 //------------------------------------------------------------------------------
+// Unsymmetric quadruple well problem
+//------------------------------------------------------------------------------
+QuadrupleWellUnsymmetric2D::QuadrupleWellUnsymmetric2D(double h, size_t nSteps)
+    : SDE(d, h, nSteps)
+{ }
+
+void QuadrupleWellUnsymmetric2D::f(Vector& x, Vector& y)
+{
+    y[0] = -4*x[0]*x[0]*x[0] + (3.0/16.0)*x[0]*x[0] + 4*x[0] - 3.0/16.0;
+    y[1] = -4*x[1]*x[1]*x[1] + (3.0/8.0)*x[1]*x[1] + 4*x[1] - 3.0/8.0;
+}
+
+void QuadrupleWellUnsymmetric2D::getSigma(Matrix& sigma)
+{
+    sigma[0][0] = 0.6; sigma[0][1] = 0.0;
+    sigma[1][0] = 0.0; sigma[1][1] = 0.6;
+}
+
+size_t QuadrupleWellUnsymmetric2D::getDimension() const
+{
+    return d;
+}
+
+//------------------------------------------------------------------------------
 // Triple well problem
 //------------------------------------------------------------------------------
 TripleWell2D::TripleWell2D(double h, size_t nSteps)
@@ -649,6 +673,7 @@ PYBIND11_MODULE(systems, m)
     EXPORT_CONT(TripleWell1D);
     EXPORT_CONT(DoubleWell2D);
     EXPORT_CONT(QuadrupleWell2D);
+    EXPORT_CONT(QuadrupleWellUnsymmetric2D);
     EXPORT_CONT(TripleWell2D);
     EXPORT_CONT(LemonSlice2D);
     EXPORT_CONT(BananaSystem);

@@ -232,6 +232,20 @@ public:
 };
 
 //------------------------------------------------------------------------------
+// Unsymmetric quadruple well problem
+//------------------------------------------------------------------------------
+class QuadrupleWellUnsymmetric2D : public SDE
+{
+public:
+    QuadrupleWellUnsymmetric2D(double h = 1e-3, size_t nSteps = 10000);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+    
+    static const size_t d = 2;
+};
+
+//------------------------------------------------------------------------------
 // Triple well problem
 //------------------------------------------------------------------------------
 class TripleWell2D : public SDE

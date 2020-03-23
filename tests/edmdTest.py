@@ -15,8 +15,10 @@ bounds = np.array([[-2, 2], [-2, 2]])
 boxes = np.array([30, 30])
 Omega = domain.discretization(bounds, boxes)
 
-# generate training data
+# define system
 f = systems.DoubleWell2D(1e-3, 10000)
+
+# generate training data
 X = Omega.rand(50000)
 Y = f(X) # double-well in two dimensions
 
