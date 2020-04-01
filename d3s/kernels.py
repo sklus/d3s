@@ -175,3 +175,48 @@ def gramian2(X, Y, k):
                 for j in range(n):
                     G[i, j] = k(X[:, i], Y[:, j])
         return G
+
+
+class densityEstimate(object):
+    '''Kernel density estimation using the Gaussian kernel.'''
+    def __init__(self, X, k, beta=1):
+        if k.__class__.__name__ != 'gaussianKernel':
+            print('Error: Only implemented for Gaussian kernel.')
+            return
+        self.X = X                                     # points for density estimation
+        self.k = k                                     # kernel
+        self.d, self.n = X.shape                       # dimension and number of data points
+        self.c = 1/_np.sqrt(2*_np.pi*k.sigma**2)**self.d # normalization constant
+        self.beta = beta                               # inverse temperature, for MD applications
+      
+    def rho(self, x):
+        G2 = gramian2(x, self.X, self.k)
+        return self.c/self.n * G2.sum(axis=1, keepdims=True).T
+    
+    def V(self, x):
+        return -_np.log(self.rho(x))/self.beta
+    
+    def gradV(self, x):
+        G2 = gramian2(x, self.X, self.k)
+        m = x.shape[1]
+        y = _np.zeros_like(x)
+        for i in range(m):
+            for j in range(self.n):
+                y[:, i] = y[:, i] + (x[:, i] - self.X[:, j])*G2[i, j]
+            y[:, i] =  1/(self.beta*self.rho(x[:, i, None])) * self.c/(self.n * self.k.sigma**2)*y[:, i]
+        return y
+    
+    # def rho(self, x):
+    #     y = 0
+    #     for i in range(self.n):
+    #         y = y + self.k(x, self.X[:, i])
+    #     return self.c/self.n * y
+    
+    # def V(self, x):
+    #     return -1/self.beta * _np.log(self.rho(x))
+    
+    # def gradV(self, x):
+    #     y = _np.zeros((self.d,))
+    #     for i in range(self.n):
+    #         y = y + self.k.diff(x, self.X[:, i])
+    #     return -1/(self.beta*self.rho(x)) * self.c/self.n * y
