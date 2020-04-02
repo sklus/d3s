@@ -386,6 +386,39 @@ def seba(V, R0=None, maxIter=5000):
     return S
 
 
+def kmeans(x, k, maxIter=100):
+    '''
+    Simple k-means implementation.
+    
+    :param x: data matrix, each column is a data point
+    :param k: number of clusters
+    :param maxIter: maximum number of iterations
+    :return: cluster numbers for all data points
+    '''
+    def update(l0):
+        c = _np.zeros((d, k))
+        for i in range(k):
+            c[:, i] = _np.mean(x[:, l0==i], axis=1)
+        D = _sp.spatial.distance.cdist(x.T, c.T)
+        l1 = D.argmin(axis=1)
+        return l1
+    
+    d, m = x.shape # number of dimensions and data points
+    l0 = _np.random.randint(0, k, size=m) # initial cluster assignments
+    
+    it = 0
+    while it < maxIter:
+        l1 = update(l0)
+        it += 1
+      
+        if (l1 == l0).all():
+            print('k-means converged after %d iterations.' % it)
+            return l1
+        l0 = l1
+    print('k-means did not converge.')
+    return l1
+
+
 # auxiliary functions
 def sortEig(A, evs=5, which='LM'):
     '''
