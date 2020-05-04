@@ -594,6 +594,29 @@ size_t DoubleWell6D::getDimension() const
 }
 
 //------------------------------------------------------------------------------
+// Poeschl–Teller potential
+//------------------------------------------------------------------------------
+PoeschlTeller::PoeschlTeller(double h, size_t nSteps)
+    : SDE(d, h, nSteps)
+{}
+
+void PoeschlTeller::f(Vector& x, Vector& y)
+{
+    const int l = 4;
+    y[0] = -l*tanh(x[0]);
+}
+
+void PoeschlTeller::getSigma(Matrix& sigma)
+{
+    sigma[0][0] = 1.0;
+}
+
+size_t PoeschlTeller::getDimension() const
+{
+    return d;
+}
+
+//------------------------------------------------------------------------------
 // Hydrogen
 //------------------------------------------------------------------------------
 Hydrogen::Hydrogen(double h, size_t nSteps)
@@ -623,24 +646,42 @@ size_t Hydrogen::getDimension() const
 }
 
 //------------------------------------------------------------------------------
-// Poeschl–Teller potential
+// Heliun
 //------------------------------------------------------------------------------
-PoeschlTeller::PoeschlTeller(double h, size_t nSteps)
+Helium::Helium(double h, size_t nSteps)
     : SDE(d, h, nSteps)
 {}
 
-void PoeschlTeller::f(Vector& x, Vector& y)
+void Helium::f(Vector& x, Vector& y)
 {
-    const double l = 3.0;
-    y[0] = -l*tanh(x[0]);
+    // approximation based on "Analytical approach to the helium-atom ground state using correlated wavefunctions"
+    const double alpha  = 1.8395;
+    const double lambda = 0.586;
+    const double mu     = 0.379;
+
+    double r1  = sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
+    double r2  = sqrt(x[3]*x[3] + x[4]*x[4] + x[5]*x[5]);
+    double r12 = sqrt( (x[3] - x[0])*(x[3] - x[0]) + (x[4] - x[1])*(x[4] - x[1]) + (x[5] - x[2])*(x[5] - x[2]) );
+
+    double deta_dr12 = - (lambda*mu*exp(-mu*r12))/(1 - lambda*exp(-mu*r12));
+
+    y[0] = -alpha*x[0]/r1 - deta_dr12 * (x[0] - x[3])/r12;
+    y[1] = -alpha*x[1]/r1 - deta_dr12 * (x[1] - x[4])/r12;
+    y[2] = -alpha*x[2]/r1 - deta_dr12 * (x[2] - x[5])/r12;
+
+    y[3] = -alpha*x[3]/r2 - deta_dr12 * (x[3] - x[0])/r12;
+    y[4] = -alpha*x[4]/r2 - deta_dr12 * (x[4] - x[1])/r12;
+    y[5] = -alpha*x[5]/r2 - deta_dr12 * (x[5] - x[2])/r12;
 }
 
-void PoeschlTeller::getSigma(Matrix& sigma)
+void Helium::getSigma(Matrix& sigma)
 {
-    sigma[0][0] = 1.0;
+    for (size_t i = 0; i < d; ++i)
+        for (size_t j = 0; j < d; ++j)
+            sigma[i][j] = (i == j ? 1.0 : 0.0);
 }
 
-size_t PoeschlTeller::getDimension() const
+size_t Helium::getDimension() const
 {
     return d;
 }
@@ -681,6 +722,7 @@ PYBIND11_MODULE(systems, m)
     EXPORT_CONT(DoubleWell3D);
     EXPORT_CONT(TripleWell3D);
     EXPORT_CONT(DoubleWell6D);
-    EXPORT_CONT(Hydrogen);
     EXPORT_CONT(PoeschlTeller);
+    EXPORT_CONT(Hydrogen);
+    EXPORT_CONT(Helium);
 }

@@ -349,6 +349,20 @@ public:
 };
 
 //------------------------------------------------------------------------------
+// Poeschl–Teller potential
+//------------------------------------------------------------------------------
+class PoeschlTeller : public SDE
+{
+public:
+    PoeschlTeller(double h = 1e-3, size_t nSteps = 1000);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+    
+    static const size_t d = 1;
+};
+
+//------------------------------------------------------------------------------
 // Hydrogen
 //------------------------------------------------------------------------------
 class Hydrogen : public SDE
@@ -363,17 +377,18 @@ public:
 };
 
 //------------------------------------------------------------------------------
-// Poeschl–Teller potential
+// Hydrogen
 //------------------------------------------------------------------------------
-class PoeschlTeller : public SDE
+class Helium : public SDE
 {
 public:
-    PoeschlTeller(double h = 1e-3, size_t nSteps = 1000);
+    Helium(double h = 1e-3, size_t nSteps = 10000);
     void f(Vector& x, Vector& y);
     void getSigma(Matrix& sigma);
     size_t getDimension() const;
     
-    static const size_t d = 1;
+    static const size_t d = 6;
 };
+
 
 #endif // D3S_SYSTEM_H
