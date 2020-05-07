@@ -163,29 +163,34 @@ def gramian2(X, Y, k):
         #print('Polynomial kernel with degree = %f and c = %f.' % (k.p, k.c))
         return (k.c + X.T@Y)**k.p
     elif name == 'stringKernel':
-        n = len(X)
-        d = _np.zeros([n, 2])
-        for i in range(n):
-            d[i, 0] = k.evaluate(X[i], X[i])
-            d[i, 1] = k.evaluate(Y[i], Y[i])
-        # compute Gram matrix
-        G = _np.zeros([n, n])
-        for i in range(n):
+        m = len(X)
+        n = len(Y)
+        dx = _np.zeros((m,))
+        dy = _np.zeros((n,))
+        for i in range(m):
+            dx[i] = k.evaluate(X[i], X[i])
+        for j in range(n):
+            dy[j] = k.evaluate(Y[j], Y[j])
+        
+        G = _np.zeros([m, n])
+        for i in range(m):
             for j in range(n):
-                G[i, j] = k.evaluate(X[i], Y[j]) / _np.sqrt(d[i, 0]*d[j, 1])
+                G[i, j] = k.evaluate(X[i], Y[j]) / _np.sqrt(dx[i]*dy[j])
         return G
     else:
-        #print('User-defined kernel.')
+        # print('User-defined kernel.')
         if isinstance(X, list): # e.g., for strings
-            n = len(X)
-            G = _np.zeros([n, n])
-            for i in range(n):
+            m = len(X)
+            n = len(Y)
+            G = _np.zeros([m, n])
+            for i in range(m):
                 for j in range(n):
                     G[i, j] = k(X[i], Y[j])
         else:
-            n = X.shape[1]
-            G = _np.zeros([n, n])
-            for i in range(n):
+            m = X.shape[1]
+            n = Y.shape[1]
+            G = _np.zeros([m, n])
+            for i in range(m):
                 for j in range(n):
                     G[i, j] = k(X[:, i], Y[:, j])
         return G
