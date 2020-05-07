@@ -13,7 +13,9 @@ class gaussianKernel(object):
     def diff(self, x, y):
         return -1/self.sigma**2*(x - y) * self(x, y)
     def ddiff(self, x, y):
-        return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(x.shape[0])) * self(x, y) 
+        return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(x.shape[0])) * self(x, y)
+    def laplace(self, x, y):
+        return (1/self.sigma**4*_np.linalg.norm(x-y)**2 - len(x)/self.sigma**2) * self(x, y)
     def __repr__(self):
         return 'Gaussian kernel with bandwidth sigma = %f.' % self.sigma
 
@@ -24,6 +26,16 @@ class laplacianKernel(object):
         self.sigma = sigma
     def __call__(self, x, y):
         return _np.exp(-_np.linalg.norm(x-y)/self.sigma)
+    def diff(self, x, y):
+        return -1/self.sigma*(x - y) / _np.linalg.norm(x-y) * self(x, y)
+    def ddiff(self, x, y):
+        # TODO: check x \ne y
+        n_xy = _np.linalg.norm(x-y)
+        return ( (1/(self.sigma**2*n_xy**2) + 1/(self.sigma*n_xy**3)) * _np.outer(x-y, x-y) - 1/(self.sigma*n_xy)*_np.eye(x.shape[0]) ) * self(x, y)
+    def laplace(self, x, y):
+        # TODO: check x \ne y
+        n_xy = _np.linalg.norm(x-y)
+        return ( 1/self.sigma**2 + (1-len(x))/(self.sigma*n_xy)) * self(x, y)
     def __repr__(self):
         return 'Laplacian kernel with bandwidth sigma = %f.' % self.sigma
 
@@ -38,7 +50,9 @@ class polynomialKernel(object):
     def diff(self, x, y):
         return self.p*(self.c + x.T @ y)**(self.p-1)*y;
     def ddiff(self, x, y):
-        return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.outer(y, y);
+        return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.outer(y, y)
+    def laplace(self, x, y):
+        return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.linalg.norm(y)**2
     def __repr__(self):
         return 'Polynomial kernel with degree p = %f and inhomogeneity c = %f.' % (self.p, self.c)
 

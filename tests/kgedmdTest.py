@@ -306,12 +306,11 @@ for i in range(m):
     if np.mod(i, 100) == 0:
         print(i)
     for j in range(m):
-        G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) + np.sum( c2(X[:, i]) * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
-
-# A, _, _, _ = np.linalg.lstsq(G_00, G_10, rcond=1e-12)
+        #G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) + np.sum( c2(X[:, i]) * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
+        G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) - h**2/(2*m0) * k.laplace(X[:, i], X[:, j])
+        
 A = sp.linalg.pinv(G_00 + epsilon*np.eye(m), rcond=1e-15) @ G_10
 d, V = algorithms.sortEig(A, evs=m, which='LM')
-# W = kernels.gramian2(Omega.midpointGrid(), X, k) @ V
 W = G_00 @ V
 
 #%% plot spectrum
