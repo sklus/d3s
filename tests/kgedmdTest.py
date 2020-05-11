@@ -66,7 +66,7 @@ epsilon = 0.1
 S = np.einsum('ijk,ljk->ilk', Z, Z) # sigma \cdot sigma^T
 
 G_00 = kernels.gramian(X, k)
-G_10 = np.zeros((m , m))
+G_10 = np.zeros((m, m))
 for i in range(m):
     for j in range(m):
         G_10[i, j] = Y[:, i].T @ k.diff(X[:, i], X[:, j]) + 0.5*np.sum( S[:, :, i] * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
@@ -225,7 +225,7 @@ k = kernels.gaussianKernel(1)
 
 #%% apply kernel generator EDMD
 G_00 = kernels.gramian(X, k)
-G_10 = np.zeros((m , m))
+G_10 = np.zeros((m, m))
 for i in range(m):
     for j in range(m):
         G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) + np.sum( c2(X[:, i]) * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
@@ -301,7 +301,7 @@ epsilon = 0.0001
 # evs = 10 # number of eigenfunctions to be computed
     
 G_00 = kernels.gramian(X, k)
-G_10 = np.zeros((m , m))
+G_10 = np.zeros((m, m))
 for i in range(m):
     if np.mod(i, 100) == 0:
         print(i)

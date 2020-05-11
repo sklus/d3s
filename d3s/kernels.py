@@ -11,13 +11,31 @@ class gaussianKernel(object):
     def __call__(self, x, y):
         return _np.exp(-_np.linalg.norm(x-y)**2/(2*self.sigma**2))
     def diff(self, x, y):
-        return -1/self.sigma**2*(x - y) * self(x, y)
+        return -1/self.sigma**2*(x-y) * self(x, y)
     def ddiff(self, x, y):
         return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(x.shape[0])) * self(x, y)
     def laplace(self, x, y):
         return (1/self.sigma**4*_np.linalg.norm(x-y)**2 - len(x)/self.sigma**2) * self(x, y)
     def __repr__(self):
         return 'Gaussian kernel with bandwidth sigma = %f.' % self.sigma
+
+
+class gaussianKernelGeneralized(object):
+    '''Generalized Gaussian kernel with bandwidths sigma = (sigma_1, ..., sigma_d).'''
+    def __init__(self, sigma):
+        self.sigma = sigma
+        self.D = _np.diag(1/(2*sigma**2))
+    def __call__(self, x, y):
+        xy = _np.squeeze(x-y) # (d, 1) vs. (d, )
+        return _np.exp(-xy.T @ self.D @ xy )
+    def diff(self, x, y):
+        return -2*self.D @ (x-y) * self(x, y)
+    def ddiff(self, x, y):
+        return (_np.outer(2*self.D@(x-y), 2*self.D@(x-y)) - 2*self.D) * self(x, y)
+    def laplace(self, x, y):
+        return (_np.linalg.norm(2*self.D@(x-y))**2 - 2*_np.trace(self.D)) * self(x, y)
+    def __repr__(self):
+        return 'Generalized Gaussian kernel with bandwidths '+_np.array_str(self.sigma)+'.'
 
 
 class laplacianKernel(object):
