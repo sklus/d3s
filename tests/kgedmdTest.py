@@ -320,7 +320,6 @@ plt.title('Spectrum')
 
 #%% visualize eigenfunctions
 for i in range(m-10, m):
-    print(d[i])
     fig = plt.figure(2)
     plt.clf()
     ax = fig.add_subplot(111, projection='3d')
@@ -329,3 +328,65 @@ for i in range(m-10, m):
     ax.scatter(X[0, ind], X[1, ind], X[2, ind], c=w[ind])
     plt.title('E_%i = %f' % (i, np.real(d[i])))
     plt.pause(1)
+
+#%% apply kernel generator EDMD to corresponding Kolmogorov backward equation ---------------------
+
+#%% change kernel bandwidth
+k.sigma = 2
+
+#%% generate data (sample uniformly from the unit ball with radius 20)
+m = 5000
+X = np.random.randn(3, m)
+r = 20*np.random.rand(m)**(1/3)
+for i in range(m):
+    X[:, i] = r[i]*X[:, i]/np.linalg.norm(X[:, i])
+
+#%% define system
+a0 = (4*np.pi*eps0*h**2)/(m0*e**2) 
+def b(x):
+    nx = np.sqrt(x[0, :]**2 + x[1, :]**2 + x[2, :]**2)
+    return -h**2/(a0*m0) * x @ np.diag(nx)
+
+def sigma(x):
+    n = x.shape[1]
+    y = np.zeros((3, 3, n))
+    y[0, 0, :] = 1
+    y[1, 1, :] = 1
+    y[2, 2, :] = 1
+    return y
+
+#%% apply kernel generator EDMD
+G_00, G_10 = gaussianG00G10(X, b, sigma, k)
+
+epsilon = 0
+A = sp.linalg.pinv(G_00 + epsilon*np.eye(m), rcond=1e-15) @ G_10
+# A, _, _, _ = np.linalg.lstsq(G_00, G_10, rcond=1e-12)
+d, V = algorithms.sortEig(A, evs=m, which='SR')
+
+# c = Omega.midpointGrid()
+# W = kernels.gramian2(c, X, k) @ V
+W = G_00 @ V
+
+#%% ground state (not normalized)
+h = 1 # reduced Planck constant 
+e = 1 # charge of single electron
+m0 = 1 # mass
+eps0 = 1 # permittivity
+
+a0 = (4*np.pi*eps0*h**2)/(m0*e**2)
+def psi_0(x):
+    return np.exp(-1/a0 * np.sqrt(x[0, :]**2 + x[1, :]**2 + x[2, :]**2))
+
+#%% visualize eigenfunctions
+#psi = psi_0(c)
+psi = psi_0(X)
+for i in range(20):
+    fig = plt.figure()
+    plt.clf()
+    ax = fig.add_subplot(111, projection='3d')
+    w = W[:, i] * psi
+    w = w/np.amax(abs(w))
+    ind, = np.where(abs(w) > 0.3)
+    #ax.scatter(c[0, ind], c[1, ind], c[2, ind], c=w[ind])
+    ax.scatter(X[0, ind], X[1, ind], X[2, ind], c=w[ind])
+    plt.title('E_%i = %f' % (i, np.real(d[i])))

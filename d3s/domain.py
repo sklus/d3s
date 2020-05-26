@@ -42,6 +42,12 @@ class discretization(object):
         Returns number of boxes.
         '''
         return self._boxes.prod()
+    
+    def numVertices(self):
+        '''
+        Returns number of vertices of the grid.
+        '''
+        return (self._boxes+1).prod()
 
     def rand(self, n):
         '''
@@ -96,40 +102,75 @@ class discretization(object):
         b = self._bounds
         h = self._h
         d = self._d
+        n = self.numBoxes()
         x = []
         for i in range(d):
             x.append( _np.linspace(b[i, 0] + h[i]/2, b[i, 1] - h[i]/2, self._boxes[i]) )
-        X = _sp.meshgrid(*x, indexing = 'ij')
-        c = _np.zeros([d, self.numBoxes()])
+        X = _sp.meshgrid(*x, indexing='ij')
+        c = _np.zeros([d, n])
         for i in range(d):
-            c[i, :] = X[i].reshape(self.numBoxes())
+            c[i, :] = X[i].reshape(n)
         return c
+    
+    def vertexGrid(self):
+        '''
+        Returns a grid given by the vertices.
+        '''
+        b = self._bounds
+        d = self._d
+        n = self.numVertices()
+        x = []
+        for i in range(d):
+            x.append( _np.linspace(b[i, 0], b[i, 1], self._boxes[i]+1) )
+        X = _sp.meshgrid(*x, indexing='ij')
+        c = _np.zeros([d, n])
+        for i in range(d):
+            c[i, :] = X[i].reshape(n)
+        isBoundary = _np.zeros(X[i].shape, dtype=bool)
+        for i in range(d):
+            ind = d*[slice(None)]
+            ind[i] = [0, self._boxes[i]]
+            isBoundary[tuple(ind)] = True
+        isBoundary = isBoundary.reshape(n)
+        return c, isBoundary
 
-    def plot(self, x, mode='2D'):
+    def plot(self, v, mode='2D', grid='midpoint'):
+        '''
+        Plots v, where v_i is the value at grid point i.
+        
+        :param mode: select plot type for two-dimensional domains.
+        :param grid: select grid type (midpoint or vertex)
+        '''
         d = self._d
         if d > 2: print('Not defined for d > 2.')
-        getattr(self, '_plot_%s' % d)(x, mode)
+        if grid == 'midpoint':
+            c = self.midpointGrid()
+            dims = self._boxes
+        elif grid == 'vertex':
+            c, _ = self.vertexGrid()
+            dims = self._boxes + 1
+        else:
+            print('Grid type not defined.')
+            return
+        getattr(self, '_plot_%s' % d)(c, v, dims, mode)
 
-    def _plot_1(self, x, mode):
-        c = self.midpointGrid().squeeze() # extract vector from matrix
-        matplotlib.pyplot.plot(c, x)
+    def _plot_1(self, c, v, dims, mode):
+        c = c.squeeze() # extract vector from matrix
+        matplotlib.pyplot.plot(c, v)
 
-    def _plot_2(self, x, mode):
-        c = self.midpointGrid()
-        X = c[0, :].reshape(self._boxes)
-        Y = c[1, :].reshape(self._boxes)
-        Z = x.reshape(self._boxes)
+    def _plot_2(self, c, v, dims, mode):
+        X = c[0, :].reshape(dims)
+        Y = c[1, :].reshape(dims)
+        Z = v.reshape(dims)
 
         if mode=='2D':
             matplotlib.pyplot.pcolor(X, Y, Z)
         else:
             fig = matplotlib.pyplot.gcf()
             ax = fig.gca(projection='3d')
-            # ax = Axes3D(fig)
-            surf = ax.plot_surface(X, Y, Z, cmap=matplotlib.cm.coolwarm)
+            ax.plot_surface(X, Y, Z, cmap=matplotlib.cm.coolwarm)
             ax.set_xlabel('x_1')
             ax.set_ylabel('x_2')
-            # fig.colorbar(surf, shrink=0.5, aspect=5)
 
 # auxiliary functions
 def randb(n, b):

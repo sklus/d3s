@@ -13,7 +13,8 @@ class gaussianKernel(object):
     def diff(self, x, y):
         return -1/self.sigma**2*(x-y) * self(x, y)
     def ddiff(self, x, y):
-        return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(x.shape[0])) * self(x, y)
+        d = 1 if x.ndim == 0 else x.shape[0]
+        return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(d)) * self(x, y)
     def laplace(self, x, y):
         return (1/self.sigma**4*_np.linalg.norm(x-y)**2 - len(x)/self.sigma**2) * self(x, y)
     def __repr__(self):
@@ -64,15 +65,46 @@ class polynomialKernel(object):
         self.p = p
         self.c = c
     def __call__(self, x, y):
+        if x.ndim == 0:
+            return (self.c + x * y)**self.p
         return (self.c + x.T @ y)**self.p
     def diff(self, x, y):
+        if x.ndim == 0:
+            return self.p*(self.c + x * y)**(self.p-1)*y;
         return self.p*(self.c + x.T @ y)**(self.p-1)*y;
     def ddiff(self, x, y):
+        if x.ndim == 0:
+            return self.p*(self.p-1)*(self.c + x.T * y)**(self.p-2) * _np.outer(y, y)
         return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.outer(y, y)
     def laplace(self, x, y):
+        if x.ndim == 0:
+            self.p*(self.p-1)*(self.c + x.T * y)**(self.p-2) * _np.linalg.norm(y)**2
         return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.linalg.norm(y)**2
     def __repr__(self):
         return 'Polynomial kernel with degree p = %f and inhomogeneity c = %f.' % (self.p, self.c)
+
+
+class periodicKernel1D(object):
+    '''One-dimensional periodic kernel with frequency p and bandwidth sigma.'''
+    def __init__(self, p, sigma):
+        self.p = p
+        self.sigma = sigma
+        
+    def __call__(self, x, y):
+        return _np.exp(-2*_np.sin((x-y)/self.p)**2/self.sigma**2)
+    
+    def diff(self, x, y):
+        s = _np.zeros((1,))
+        s[0] = -4*_np.sin((x-y)/self.p)*_np.cos((x-y)/self.p)/(self.sigma**2*self.p) * self(x, y)
+        return s
+    
+    def ddiff(self, x, y):
+        s = _np.zeros((1, 1))
+        s[0, 0] = -(4*(4*_np.cos((x-y)/self.p)**4 + 2*_np.cos((x-y)/self.p)**2*self.sigma**2 - 4*_np.cos((x-y)/self.p)**2 - self.sigma**2))/(self.sigma**4*self.p**2) * self(x, y)
+        return s
+    
+    def __repr__(self):
+        return 'One-dimensional periodic kernel with frequency p = %f and bandwidth sigma = %f.' % (self.p, self.sigma)
 
 
 class stringKernel(object):
@@ -126,6 +158,46 @@ class stringKernel(object):
 
         return s
 
+
+class productKernel(object):
+    '''Product of one-dimensional kernels, i.e., k(x) = k(x_1) ... k(x_d).'''
+    def __init__(self, k):
+        self.k = k
+        self.d = len(k)
+    
+    def __call__(self, x, y):
+        s = 1
+        for i in range(self.d):
+            s *= self.k[i](x[i], y[i])
+        return s
+    
+    def diff(self, x, y):
+        ds = self(x, y) * _np.ones((self.d, 1))
+        for i in range(self.d):
+            ds[i] *= self.k[i].diff(x[i], y[i]) / self.k[i](x[i], y[i])
+        return ds
+    
+    def ddiff(self, x, y):
+        dds = self(x, y) * _np.ones((self.d, self.d))
+        for i in range(self.d):
+            for j in range(i+1):
+                if i == j:
+                    dds[i, j] *= self.k[i].ddiff(x[i], y[i]) / self.k[i](x[i], y[i])
+                else:
+                    dds[i, j] *= self.k[i].diff(x[i], y[i]) / self.k[i](x[i], y[i]) * self.k[j].diff(x[j], y[j]) / self.k[j](x[j], y[j])
+                    dds[j, i] = dds[i, j]
+        return dds
+            
+    def laplace(self, x, y):
+        s = self(x, y)
+        ls = 0
+        for i in range(self.d):
+            ls += s * self.k[i].ddiff(x[i], y[i])[0, 0] / self.k[i](x[i], y[i])
+        return ls
+    
+    def __repr__(self):
+        return 'Product kernel with ' + str(self.k) + '.'
+    
 
 def gramian(X, k):
     '''Compute Gram matrix for training data X with kernel k.'''
@@ -220,11 +292,11 @@ class densityEstimate(object):
         if k.__class__.__name__ != 'gaussianKernel':
             print('Error: Only implemented for Gaussian kernel.')
             return
-        self.X = X                                     # points for density estimation
-        self.k = k                                     # kernel
-        self.d, self.n = X.shape                       # dimension and number of data points
+        self.X = X                                       # points for density estimation
+        self.k = k                                       # kernel
+        self.d, self.n = X.shape                         # dimension and number of data points
         self.c = 1/_np.sqrt(2*_np.pi*k.sigma**2)**self.d # normalization constant
-        self.beta = beta                               # inverse temperature, for MD applications
+        self.beta = beta                                 # inverse temperature, for MD applications
       
     def rho(self, x):
         G2 = gramian2(x, self.X, self.k)
