@@ -142,7 +142,9 @@ class discretization(object):
         :param grid: select grid type (midpoint or vertex)
         '''
         d = self._d
-        if d > 2: print('Not defined for d > 2.')
+        if d > 3:
+            print('Not defined for d > 3.')
+            return
         if grid == 'midpoint':
             c = self.midpointGrid()
             dims = self._boxes
@@ -155,7 +157,7 @@ class discretization(object):
         getattr(self, '_plot_%s' % d)(c, v, dims, mode)
 
     def _plot_1(self, c, v, dims, mode):
-        c = c.squeeze() # extract vector from matrix
+        c = c.squeeze()
         matplotlib.pyplot.plot(c, v)
 
     def _plot_2(self, c, v, dims, mode):
@@ -171,6 +173,19 @@ class discretization(object):
             ax.plot_surface(X, Y, Z, cmap=matplotlib.cm.coolwarm)
             ax.set_xlabel('x_1')
             ax.set_ylabel('x_2')
+
+    def _plot_3(self, c, v, dims, mode):
+        X = c[0, :].reshape(dims)
+        Y = c[1, :].reshape(dims)
+        Z = c[2, :].reshape(dims)
+        V = v.reshape(dims)
+        
+        fig = matplotlib.pyplot.gcf()
+        ax = fig.gca(projection='3d')
+        ax.scatter(X, Y, Z, c=V)
+        ax.set_xlabel('x_1')
+        ax.set_ylabel('x_2')
+        ax.set_zlabel('x_3')
 
 # auxiliary functions
 def randb(n, b):

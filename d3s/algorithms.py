@@ -129,7 +129,7 @@ def ulam(X, Y, Omega, evs=5, operator='K'):
     Ulam's method for the Koopman or Perron-Frobenius operator. The matrices X and Y contain
     the input data.
 
-    :param Omega:    box discretization of type topy.domain.discretization
+    :param Omega:    box discretization of type d3s.domain.discretization
     :param evs:      number of eigenvalues/eigenvectors
     :param operator: 'K' for Koopman or 'P' for Perron-Frobenius
     :return:         eigenvalues d and corresponding eigenvectors V containing the coefficients for the eigenfunctions
@@ -232,7 +232,7 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
     '''
     Sparse indentification of nonlinear dynamics for the data given by X and Y.
 
-    :param psi:        set of basis functions, see topy.observables
+    :param psi:        set of basis functions, see d3s.observables
     :param eps:        cutoff threshold
     :param iterations: number of sparsification steps
     :return:           coefficient matrix Xi
