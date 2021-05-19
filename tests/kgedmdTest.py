@@ -299,7 +299,7 @@ for i in range(m):
 #%% apply kernel generator EDMD
 epsilon = 0.0001
 # evs = 10 # number of eigenfunctions to be computed
-    
+
 G_00 = kernels.gramian(X, k)
 G_10 = np.zeros((m, m))
 for i in range(m):
@@ -308,7 +308,7 @@ for i in range(m):
     for j in range(m):
         #G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) + np.sum( c2(X[:, i]) * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
         G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) - h**2/(2*m0) * k.laplace(X[:, i], X[:, j])
-        
+
 A = sp.linalg.pinv(G_00 + epsilon*np.eye(m), rcond=1e-15) @ G_10
 d, V = algorithms.sortEig(A, evs=m, which='LM')
 W = G_00 @ V
