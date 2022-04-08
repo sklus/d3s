@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D # noqa: F401 unused import
 
 import d3s.domain as domain
+import d3s.observables as observables
 import d3s.kernels as kernels
 import d3s.algorithms as algorithms
 import d3s.systems as systems
@@ -81,50 +82,63 @@ for i in range(evs):
 
 #%% Poeschl-Teller potential as SDE ---------------------------------------------------------------
 
-#%% define system
+#%% define domain
+bounds = np.array([[-2, 2]])
+boxes = np.array([100])
+Omega = domain.discretization(bounds, boxes)
+
+#% % define system
 h = 1e-3
 nSteps = 100
+tau = nSteps*h
 f = systems.PoeschlTeller(h, nSteps)
 
-#%% generate training data
-tau = nSteps*h
-X = Omega.randPerBox(1000)
+#% % generate training data
+X = Omega.randPerBox(100)
 Y = f(X)
 
-#%% Ulam for Koopman
-d, V = algorithms.ulam(X, Y, Omega, evs)
+#% % Ulam for Koopman
+# phi = observables.monomials(10)
+# K, d, V = algorithms.edmd(X, Y, phi, evs)
 
-printVector(np.real(d), 'd')
+c = Omega.midpointGrid()
+# W = V.T @ phi(c)
 
-mu = -np.log(d)/tau
-printVector(np.real(mu), 'mu')
+# printVector(np.real(d), 'd')
 
-E0 = -8
-printVector(np.real(mu)+E0, 'mu_shifted')
+# mu = -np.log(d)/tau
+# printVector(np.real(mu), 'mu')
 
-#%% plot eigenfunctions and eigenfunctions multiplied by ground state
-for i in range(evs):
-    plt.figure()
-    w = np.real(V[:, i])
-    w = w/np.amax(abs(w))
-    Omega.plot(w)
+# E0 = -8
+# printVector(np.real(mu)+E0, 'mu_shifted')
+
+#% % plot eigenfunctions and eigenfunctions multiplied by ground state
+# for i in range(evs):
+#     plt.figure(i+1)
+#     plt.clf()
+#     w = np.real(W[i, :])
+#     w = w/np.amax(abs(w))
+#     Omega.plot(w)
     
-    wa = psi[i](c)/psi[0](c)
-    wa = wa/np.amax(abs(wa))
-    plt.plot(c.T, wa.T)   
-    
-for i in range(evs):
-    plt.figure()
-    w = np.real(V[:, i])*np.squeeze(psi[0](c))
-    w = w/np.amax(abs(w))
-    Omega.plot(w)
-    
-    wa = psi[i](c)
-    wa = wa/np.amax(abs(wa))
-    plt.plot(c.T, wa.T)
+#     wa = psi[i](c)/psi[0](c)
+#     wa = wa/np.amax(abs(wa))
+#     plt.plot(c.T, wa.T)
 
-#%% Ulam for Perron-Frobenius
-d, V = algorithms.ulam(X, Y, Omega, evs, operator='P')
+# for i in range(evs):
+#     plt.figure()
+#     w = np.real(W[i, :])*np.squeeze(psi[0](c))
+#     w = w/np.amax(abs(w))
+#     Omega.plot(w)
+    
+#     wa = psi[i](c)
+#     wa = wa/np.amax(abs(wa))
+#     plt.plot(c.T, wa.T)
+
+#% % Ulam for Perron-Frobenius
+phi = observables.gaussians(Omega, 0.5)
+P, d, V = edmd(X, Y, phi, evs, operator='P')
+
+W = V.T @ phi(c)
 
 printVector(np.real(d), 'd')
 
@@ -138,12 +152,22 @@ printVector(np.real(mu)+E0, 'mu_shifted')
 beta = 2
 mu = np.exp(2*s*np.log(sech(c)))
 for i in range(evs):
-    plt.figure()
-    w = np.real(V[:, i])
+    plt.figure(i+1)
+    plt.clf()
+    w = np.real(W[i, :])
     w = w/np.amax(abs(w))
     Omega.plot(w)
     
     wa = psi[i](c)*mu/psi[0](c)
     wa = wa/np.amax(abs(wa))
-    plt.plot(c.T, wa.T)   
+    plt.plot(c.T, wa.T) 
+
+#%%
+for i in range(evs):
+    w = np.real(W[i, :])
+    w = w/np.amax(abs(w))
+    mat.plot(c, w)
     
+    wa = psi[i](c)*mu/psi[0](c)
+    wa = wa/np.amax(abs(wa))
+    mat.plot(c, wa)

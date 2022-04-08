@@ -3,7 +3,6 @@
 import numpy as _np
 from scipy.spatial import distance
 
-
 class gaussianKernel(object):
     '''Gaussian kernel with bandwidth sigma.'''
     def __init__(self, sigma):

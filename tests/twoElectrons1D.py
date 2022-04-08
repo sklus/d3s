@@ -55,7 +55,8 @@ epsilon = 1e-12
 G_10 = np.zeros((m, m))
 for i in range(m):
     for j in range(m):
-        G_10[i, j] = -h**2/(2*m0) * k_a.laplace(X[:, i], X[:, j]) # no term related to the potential since V is 0 inside the box
+        #G_10[i, j] = -h**2/(2*m0) * k_a.laplace(X[:, i], X[:, j]) # no term related to the potential since V is 0 inside the box
+        G_10[i, j] = 1/(np.abs(X[0, i] - X[1, i])+0.01) * k_a(X[:, i], X[:, j]) - h**2/(2*m0) * k_a.laplace(X[:, i], X[:, j]) 
 
 d, V = ceig.hcgeig(G_10, G_00 + epsilon*np.eye(m), N)
 

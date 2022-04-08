@@ -434,3 +434,14 @@ def sortEig(A, evs=5, which='LM'):
         d, V = _sp.linalg.eig(A)
     ind = d.argsort()[::-1] # [::-1] reverses the list of indices
     return (d[ind], V[:, ind])
+
+
+def dinv(D):
+    '''
+    Computes inverse of diagonal matrix.
+    '''
+    eps = 1e-8
+    d = _np.diag(D)
+    if _np.any(d < eps):
+        print('Warning: Ill-conditioned or singular matrix.')
+    return _np.diag(1/d)
