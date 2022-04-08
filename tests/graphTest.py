@@ -58,4 +58,22 @@ plt.figure(5)
 plt.clf()
 plt.plot(c)
 
+#%% Double-well graph -----------------------------------------------------------------------------
+
+# load variables from mat file into main scope
+data = sp.io.loadmat('data/doubleWellGraph.mat', squeeze_me=True)
+for s in data.keys():
+    if s[:2] == '__' and s[-2:] == '__': continue
+    exec('%s = data["%s"]' % (s, s))
+
+[n, m] = A.shape[1:]
+pos = {i: (p[0, i], p[1, i]) for i in range(n)} # positions of the vertices
+
+plt.figure(5)
+for i in range(m):
+    print(i)
+    plt.clf()
+    G = networks.graph(A[:, :, i])
+    G.draw(pos=pos)
+    plt.pause(0.5)
 

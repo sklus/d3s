@@ -70,16 +70,19 @@ class graph(object):
         else:
             print('Unknown type.')
     
-    def draw(self, c=None):
+    def draw(self, c=None, pos=None):
         A = self.A - _np.diag(_np.diag(self.A)) # remove self-loops
         
         if self.isSymmetric():
             G = _nx.from_numpy_matrix(A)
         else:
             G = _nx.from_numpy_matrix(A, create_using=_nx.DiGraph)
+            
+        if pos is None:
+            # pos = nx.spring_layout(G)
+            pos = _nx.nx_agraph.graphviz_layout(G, prog='neato')
+            print(pos)
         
-        # pos = nx.spring_layout(G)
-        pos = _nx.nx_agraph.graphviz_layout(G, prog='neato')
         if c is None:
             _nx.draw(G, pos, node_size=1000, with_labels=True, font_size=15)
         else:
