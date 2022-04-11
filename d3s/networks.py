@@ -81,7 +81,6 @@ class graph(object):
         if pos is None:
             # pos = nx.spring_layout(G)
             pos = _nx.nx_agraph.graphviz_layout(G, prog='neato')
-            print(pos)
         
         if c is None:
             _nx.draw(G, pos, node_size=1000, with_labels=True, font_size=15)

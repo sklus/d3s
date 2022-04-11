@@ -5,6 +5,8 @@ import scipy as sp
 import matplotlib.pyplot as plt
 
 import d3s.networks as networks
+
+import d3s.algorithms as algorithms
 from d3s.tools import printVector, printMatrix
 
 #%% Simple guiding example ------------------------------------------------------------------------
@@ -66,14 +68,70 @@ for s in data.keys():
     if s[:2] == '__' and s[-2:] == '__': continue
     exec('%s = data["%s"]' % (s, s))
 
-[n, m] = A.shape[1:]
-pos = {i: (p[0, i], p[1, i]) for i in range(n)} # positions of the vertices
+[n_v, n_t] = A.shape[1:]
+pos = {i: (p[0, i], p[1, i]) for i in range(n_v)} # positions of the vertices
 
-plt.figure(5)
-for i in range(m):
-    print(i)
+# generate random walks in time-evolving graph
+m = 5000 # number of random walkers
+Z = np.zeros((m, 10*n_t+1), dtype=np.uint64)
+Z[:, 0] = np.random.randint(0, n_v, size=m)
+
+plt.figure(6)
+for i in range(n_t):
     plt.clf()
     G = networks.graph(A[:, :, i])
+    
+    for j in range(m):
+        z = G.randomWalk(Z[j, 10*i], 10)
+        Z[j, 10*i+1:10*i+11] = z
+    
     G.draw(pos=pos)
+    
+    z = Z[:, 10*i+10]
+    r0 = p[0, z] + 0.1*np.random.randn(m,)
+    r1 = p[1, z] + 0.1*np.random.randn(m,)
+    plt.plot(r0, r1, 'r.')
+    
     plt.pause(0.5)
 
+# compute (cross-)covariance matrices
+X = np.zeros((n_v, m))
+Y = np.zeros((n_v, m))
+
+for i in range(m):
+    p = Z[i, 0]
+    X[p, i] = 1
+    
+    q = Z[i, -1]
+    Y[q, i] = 1
+    
+C_xx = 1/m*(X@X.T)
+C_xy = 1/m*(X@Y.T)
+C_yy = 1/m*(Y@Y.T)
+
+eps = 1e-8
+F = algorithms.dinv(C_xx + eps*np.eye(n_v)) @ C_xy @ algorithms.dinv(C_yy + eps*np.eye(n_v)) @ C_xy.T
+
+d, V = algorithms.sortEig(F, 5)
+
+# plot results
+plt.figure(7)
+plt.clf()
+plt.plot(d, '.')
+
+plt.figure(8)
+plt.clf()
+plt.plot(V[:, :2], '.-')
+
+s = algorithms.seba(V[:, :2])
+c = np.argmax(s, axis=1) + 1
+ind, = np.where(np.sum(s, axis=1) < 0.1)
+c[ind] = 0
+
+c[c == 0] = 123 # yellow (transition region)
+c[c == 1] = 50  # green (coherent set 1)
+c[c == 2] = 99  # red (coherent set 2)
+
+plt.figure(9)
+G = networks.graph(A[:, :, 0])
+G.draw(c=c, pos=pos)
