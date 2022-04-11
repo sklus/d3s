@@ -8,18 +8,14 @@ from d3s.algorithms import dinv, sortEig
 
 class graph(object):
     '''
-    Simple graph class.
+    Simple directed or undirected graph.
     '''
     
     colors = ('aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque', 'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk', 'crimson', 'cyan', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray', 'darkgreen', 'darkkhaki', 'darkmagenta', 'darkolivegreen', 'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen', 'darkslateblue', 'darkslategray', 'darkturquoise', 'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dodgerblue', 'firebrick', 'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro', 'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow', 'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender', 'lavenderblush', 'lawngreen', 'lemonchiffon', 'lime', 'limegreen', 'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue', 'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue', 'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue', 'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace', 'olive', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'purple', 'red', 'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen', 'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray', 'snow', 'springgreen', 'steelblue', 'tan', 'teal', 'thistle', 'tomato', 'turquoise', 'violet', 'wheat', 'whitesmoke', 'yellow', 'yellowgreen')
     
-    def __init__(self, x):
-        if _np.isscalar(x):
-            self.n = x            # number of vertices
-            self.A = _np.zeros(x) # adjacency matrix
-        else:
-            self.n = x.shape[0]  # number of vertices
-            self.A = x           # adjacency matrix
+    def __init__(self, A):
+        self.n = A.shape[0]  # number of vertices
+        self.A = A           # adjacency matrix
     
     def addEdge(self, i, j, w=1):
         self.A[i, j] = w
@@ -83,14 +79,36 @@ class graph(object):
             pos = _nx.nx_agraph.graphviz_layout(G, prog='neato')
         
         if c is None:
-            _nx.draw(G, pos, node_size=1000, with_labels=True, font_size=15)
+            _nx.draw(G, pos, node_size=500, with_labels=True, font_size=10)
         else:
             col = [graph.colors[i] for i in c]
-            _nx.draw(G, pos, node_color=col, node_size=1000, with_labels=True, font_size=15)
+            _nx.draw(G, pos, node_color=col, node_size=500, with_labels=True, font_size=10)
+            
+    def spectralClustering(self, nc, variant='rw'):
+        P = self.transitionMatrix(variant)
+        d, V = sortEig(P, evs=nc, which='LR')
+        _, c = _sp.cluster.vq.kmeans2(_np.real(V), nc, iter=100, minit='++')
+        return (d, V, c)
 
-
-def spectralClustering(G, nc, variant='rw'):
-    P = G.transitionMatrix(variant)
-    d, V = sortEig(P, evs=nc, which='LR')
-    _, c = _sp.cluster.vq.kmeans2(_np.real(V), nc, iter=100, minit='++')
-    return (d, V, c)
+class tgraph():
+    '''
+    Simple time-evolving directed or undirected graph.
+    '''
+    def __init__(self, A):
+        self.n = A.shape[0]  # number of vertices
+        self.T = A.shape[2]  # number of graphs
+        self.A = A           # adjacency matrix
+    
+    def __getitem__(self, t):
+        return graph(self.A[:, :, t])
+    
+    def spectralClustering(self, nc):
+        P = _np.eye(self.n)
+        for t in range(self.T):
+            P = P @ self[t].transitionMatrix('rw')
+        D_nu = _np.diag(_np.sum(P, 0)) # uniform density mapped forward
+        Q = P @ dinv(D_nu) @ P.T
+        
+        d, V = sortEig(Q, evs=nc, which='LR')
+        _, c = _sp.cluster.vq.kmeans2(_np.real(V), nc, iter=100, minit='++')
+        return (d, V, c)
