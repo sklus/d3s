@@ -10,7 +10,7 @@ import d3s.observables as observables
 import d3s.kernels as kernels
 import d3s.algorithms as algorithms
 import d3s.systems as systems
-from d3s.tools import printVector, printMatrix 
+from d3s.tools import printVector, printMatrix
 
 plt.ion()
 
@@ -94,7 +94,7 @@ PsiX = psi(X)
 dPsiY = np.einsum('ijk,jk->ik', psi.diff(X), Y)
 if not (Z is None): # stochastic dynamical system
     n = PsiX.shape[0] # number of basis functions
-    ddPsiX = psi.ddiff(X) # secplond-order derivatives
+    ddPsiX = psi.ddiff(X) # second-order derivatives
     S = np.einsum('ijk,ljk->ilk', Z, Z) # sigma \cdot sigma^T
     for i in range(n):
         dPsiY[i, :] += 0.5*np.sum( ddPsiX[i, :, :, :] * S, axis=(0,1) )
@@ -169,7 +169,7 @@ def sigma(x):
 k = kernels.gaussianKernel(0.2)
 
 #%% generate data
-X = Omega.rand(500)
+X = Omega.rand(1000)
 Y = b(X)
 Z = sigma(X)
 m = X.shape[1]
