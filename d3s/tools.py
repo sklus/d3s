@@ -20,11 +20,18 @@ def printVector(x, name = None, k = 8):
     '''Prints the vector like Matlab.'''
     n = x.size
     c = 0
-    if name != None: print(name + ' = ')
+    isReal = ~_np.any(_np.iscomplex(x))
+    if name != None:
+        print(name + ' = ')
     while c < n:
         print('\033[94m  (columns %s through %s)\033[0m' % (c, min(c+k, n)-1))
         for j in range(c, min(c+k, n)):
-            print('  % 10.5f' % x[j], end = '')
+            if isReal:
+                print(f'  {x[j]: 10.5f}', end = '')
+            else:
+                re = _np.real(x[j])
+                im = _np.imag(x[j])
+                print(f'  {re: 8.3f} + {im:.3f}i' if im >= 0 else f'  {re: 8.3f} - {abs(im):.3f}i', end = '')
         print('')
         c += k
 
@@ -33,12 +40,19 @@ def printMatrix(x, name = None, k = 8):
     '''Prints the matrix like Matlab.'''
     m, n = x.shape
     c = 0
-    if name != None: print(name + ' = ')
+    isReal = ~_np.any(_np.iscomplex(x))
+    if name != None:
+        print(name + ' = ')
     while c < n:
         print('\033[94m  (columns %s through %s)\033[0m' % (c, min(c+k, n)-1))
         for i in range(m):
             for j in range(c, min(c+k, n)):
-                print('  % 10.5f' % x[i, j], end = '')
+                if isReal:
+                    print(f'  {x[i, j]: 10.5f}', end = '')
+                else:
+                    re = _np.real(x[i, j])
+                    im = _np.imag(x[i, j])
+                    print(f'  {re: 8.3f} + {im:.3f}i' if im >= 0 else f'  {re: 8.3f} - {abs(im):.3f}i', end = '')
             print('')
         c += k
 

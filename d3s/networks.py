@@ -90,7 +90,7 @@ class graph(object):
         _, c = _sp.cluster.vq.kmeans2(_np.real(V), nc, iter=100, minit='++')
         return (d, V, c)
 
-class tgraph():
+class tgraph(object):
     '''
     Simple time-evolving directed or undirected graph.
     '''
