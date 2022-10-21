@@ -418,6 +418,31 @@ size_t TripleWell2D::getDimension() const
 }
 
 //------------------------------------------------------------------------------
+// Himmelblau potential
+//------------------------------------------------------------------------------
+Himmelblau::Himmelblau(double h, size_t nSteps)
+    : SDE(d, h, nSteps)
+{}
+
+void Himmelblau::f(Vector& x, Vector& y)
+{
+    // Himmelblau potential: V(x) = (x_1^2 + x_2 - 11)^2 + (x_1 + x_2^2 - 7)^2
+    y[0] = -( 4*x[0]*(x[0]*x[0] + x[1] - 11) + 2*(x[0] + x[1]*x[1] - 7) );
+    y[1] = -( 2*(x[0]*x[0] + x[1] - 11) + 4*x[1]*(x[0] + x[1]*x[1] - 7) );
+}
+
+void Himmelblau::getSigma(Matrix& sigma)
+{
+    sigma[0][0] = std::sqrt(20); sigma[0][1] = 0.0;
+    sigma[1][0] = 0.0; sigma[1][1] = std::sqrt(20);
+}
+
+size_t Himmelblau::getDimension() const
+{
+    return d;
+}
+
+//------------------------------------------------------------------------------
 // n-well on circle a.k.a. "lemon-slice potential"
 //------------------------------------------------------------------------------
 LemonSlice2D::LemonSlice2D(double h, size_t nSteps)
@@ -716,6 +741,7 @@ PYBIND11_MODULE(systems, m)
     EXPORT_CONT(QuadrupleWell2D);
     EXPORT_CONT(QuadrupleWellUnsymmetric2D);
     EXPORT_CONT(TripleWell2D);
+    EXPORT_CONT(Himmelblau);
     EXPORT_CONT(LemonSlice2D);
     EXPORT_CONT(BananaSystem);
     EXPORT_CONT(FastSlowSDE);

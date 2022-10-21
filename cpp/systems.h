@@ -260,6 +260,20 @@ public:
 };
 
 //------------------------------------------------------------------------------
+// Himmelblau potential
+//------------------------------------------------------------------------------
+class Himmelblau : public SDE
+{
+public:
+    Himmelblau(double h = 1e-3, size_t nSteps = 1000);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+    
+    static const size_t d = 2;
+};
+
+//------------------------------------------------------------------------------
 // n-well on circle a.k.a. "lemon-slice potential"
 //------------------------------------------------------------------------------
 class LemonSlice2D : public SDE
