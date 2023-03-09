@@ -169,7 +169,7 @@ class discretization(object):
             matplotlib.pyplot.pcolor(X, Y, Z)
         else:
             fig = matplotlib.pyplot.gcf()
-            ax = fig.gca(projection='3d')
+            ax = fig.subplots(subplot_kw={"projection": "3d"})
             ax.plot_surface(X, Y, Z, cmap=matplotlib.cm.coolwarm)
             ax.set_xlabel('x_1')
             ax.set_ylabel('x_2')
@@ -181,7 +181,7 @@ class discretization(object):
         V = v.reshape(dims)
         
         fig = matplotlib.pyplot.gcf()
-        ax = fig.gca(projection='3d')
+        ax = fig.subplots(subplot_kw={"projection": "3d"})
         ax.scatter(X, Y, Z, c=V)
         ax.set_xlabel('x_1')
         ax.set_ylabel('x_2')

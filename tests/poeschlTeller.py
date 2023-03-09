@@ -34,7 +34,7 @@ def c0(x):
 def c2(x):
     return -h**2/(2*m0)
 
-#%% analytically computed eigenfunctions fors = 4
+#%% analytically computed eigenfunctions for s = 4
 psi = (lambda x : sech(x)**4,
        lambda x : sech(x)**3*np.tanh(x),
        lambda x : sech(x)**2*(7*np.tanh(x)**2 - 1),
