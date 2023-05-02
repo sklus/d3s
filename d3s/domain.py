@@ -87,7 +87,7 @@ class discretization(object):
         '''
         Finds corresponding multi-index of the box that contains x.
         '''
-        mind = -1*_np.ones(self._d, _np.int)
+        mind = -1*_np.ones(self._d, _np.int64)
         for i in range(self._d):
             if x[i] < self._bounds[i, 0] or x[i] >= self._bounds[i, 1]:
                 print('Value out of bounds! Invalid box returned.')
