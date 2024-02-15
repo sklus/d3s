@@ -138,7 +138,7 @@ def ulam(X, Y, Omega, evs=5, operator='K'):
     '''
     m = X.shape[1] # number of test points
     n = Omega.numBoxes() # number of boxes
-    A = _sp.zeros([n, n])
+    A = _np.zeros([n, n])
     # compute transitions
     for i in range(m):
         ix = Omega.index(X[:, i])
@@ -262,7 +262,7 @@ def kpca(X, k, evs=5):
     
     # center Gram matrix
     n = X.shape[1]
-    N = _np.eye(n) - 1/n*_sp.ones((n, n))
+    N = _np.eye(n) - 1/n*_np.ones((n, n))
     G = N @ G @ N    
     d, V = sortEig(G, evs)
     return (d, V)
@@ -285,7 +285,7 @@ def kcca(X, Y, k, evs=5, epsilon=1e-6):
     # center Gram matrices
     n = X.shape[1]
     I = _np.eye(n)
-    N = I - 1/n*_sp.ones((n, n))
+    N = I - 1/n*_np.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
     
@@ -312,14 +312,14 @@ def cmd(X, Y, evs=5, epsilon=1e-6):
     # center Gram matrices
     n = X.shape[1]
     I = _np.eye(n)
-    N = I - 1/n*_sp.ones((n, n))
+    N = I - 1/n*_np.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
     
     A = _sp.linalg.solve(G_0 + epsilon*I, _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')) @ G_0
     
     d, V = sortEig(A, evs)
-    rho = _sp.sqrt(d);
+    rho = _np.sqrt(d);
     W = _sp.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _sp.diag(rho)
     
     Xi = X @ V
@@ -347,21 +347,21 @@ def seba(V, R0=None, maxIter=5000):
     n, r = V.shape
     
     V, _ = _sp.linalg.qr(V, mode='economic')
-    mu = 0.99/_sp.sqrt(n)
+    mu = 0.99/_np.sqrt(n)
     
     if R0 == None:
         R0 = _np.eye(r)
     else:
         R0, _ = _sp.linalg.polar(R0)
     
-    S = _sp.zeros((n, r))
+    S = _np.zeros((n, r))
     
     for i in range(maxIter):
         Z = V @ R0.T
         
         # threshold
         for j in range(r):
-            S[:, j] = _sp.sign(Z[:, j]) * _sp.maximum(abs(Z[:, j]) - mu, 0)
+            S[:, j] = _np.sign(Z[:, j]) * _np.maximum(abs(Z[:, j]) - mu, 0)
             S[:, j] = S[:, j]/_sp.linalg.norm(S[:, j])
         
         # polar decomposition
@@ -376,11 +376,11 @@ def seba(V, R0=None, maxIter=5000):
     
     # choose correct parity and normalize
     for j in range(r):
-        S[:, j] = S[:, j] * _sp.sign(S[:, j].sum())
-        S[:, j] = S[:, j] / _sp.amax(S[:, j])
+        S[:, j] = S[:, j] * _np.sign(S[:, j].sum())
+        S[:, j] = S[:, j] / _np.amax(S[:, j])
     
     # sort vectors
-    ind = _sp.argsort(_np.min(S, axis=0))[::-1]
+    ind = _np.argsort(_np.min(S, axis=0))[::-1]
     S = S[:, ind]
         
     return S
