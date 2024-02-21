@@ -390,29 +390,33 @@ def seba(V, R0=None, maxIter=5000):
 
     return S
 
-def diffMaps(X, Y, Z=None, bounds=None, eps='bgh', r='eps', n_v=20, nn=20):
+def diffMaps(X, Y, Z=None, bounds=None, eps='bh', r='eps', n_v=20, nn=20):
     '''
     Finding coherent sets with diffusion maps. Based on
     Banisch, Ralf and P´eter Koltai (Mar. 2017). “Understanding the Geometry of
     Transport: Diffusion Maps for Lagrangian Trajectory Data Unravel Coherent
     Sets”. In: Chaos 27.3, p. 035804. issn: 1054-1500, 1089-7682. doi: 10.1063/
-    1.4971788..
+    1.4971788.
 
     :param X:    data matrix, x-coordinates, shape:n_points x n_timesteps
     :param Y:    data matrix, y-coordinates, shape:n_points x n_timesteps
-    :param Z:    data matrix, y-coordinates, shape:n_points x n_timesteps
-    :param eps:  diffusion bandwidth, either a number or 'bgh' for automatic
+    :param Z:    data matrix, z-coordinates, shape:n_points x n_timesteps
+    :param bounds: Indication vector (0 or 1; FALSE or TRUE) for boundary 
+                 points; will set absorbing bc at indicated points (those at
+                 whose index the vector contains 1 or TRUE) instead of 
+                 reflecting bc
+    :param eps:  diffusion bandwidth, either a number or 'bh' for automatic
                  choice as in [1]
     :param r:    Cut-off radius for nearest neighbor search, either a number or
-                 3*sqrt(eps)
+                 'eps' to choose r=3*sqrt(eps)
     :param n_v:  number of Eigenvalues/vectors to return
     :param nn:   number of nearest neighbors to query
     :return:     (Eigenvalues, Eigenvectors)
 
-    [1] Berry, Tyrus, Dimitrios Giannakis, and John Harlim. “Nonparametric
-    Forecasting of Low-Dimensional Dynamical Systems.” Physical Review E 91,
-    no. 3 (March 19, 2015): 032915.
-    https://doi.org/10.1103/PhysRevE.91.032915.
+    [1] Berry, Tyrus, and John Harlim. “Variable Bandwidth Diffusion Kernels.” 
+    Applied and Computational Harmonic Analysis 40, no. 1 (January 2016): 
+        68–96. https://doi.org/10.1016/j.acha.2015.01.001.
+
 
     '''
 
@@ -430,16 +434,15 @@ def diffMaps(X, Y, Z=None, bounds=None, eps='bgh', r='eps', n_v=20, nn=20):
             epsilons = 2**_np.arange(-40., 41., 1.)
 
         epsilons = _np.sort(epsilons).astype('float')
-        log_T = [logsumexp(-dist/(4. * eps)) for eps in epsilons]
+        log_T = [logsumexp(-dist**2/(eps)) for eps in epsilons]
         log_eps = _np.log(epsilons)
         log_deriv = _np.diff(log_T)/_np.diff(log_eps)
         max_loc = _np.argmax(log_deriv)
-        # epsilon = np.max([np.exp(log_eps[max_loc]), np.exp(log_eps[max_loc+1])])
         epsilon = _np.exp(log_eps[max_loc])
         return epsilon
 
-    if not(isinstance(eps, numbers.Number) or eps=="bgh"):
-        raise ValueError("Epsilon has to be a number or string *bgh*")
+    if not(isinstance(eps, numbers.Number) or eps=="bh"):
+        raise ValueError("Epsilon has to be a number or string \"bh\"")
 
     if r=="eps":
         if isinstance(eps, numbers.Number):
@@ -447,18 +450,18 @@ def diffMaps(X, Y, Z=None, bounds=None, eps='bgh', r='eps', n_v=20, nn=20):
         else:
             warnings.warn("Cut-Off radius has to be applied before" +
                           " diffusion similarity matrix construction. With " +
-                          "BGH method eps is not known then. No cut-off " +
+                          "BH method eps is not known then. No cut-off " +
                           "radius applied.")
             r = -1
     elif not isinstance(r, numbers.Number):
-        raise ValueError("Need to supply a number or string *eps* to r")
+        raise ValueError("Need to supply a number or string \"eps\" to r")
 
     n_points, n_steps = X.shape
     P = _sp.sparse.csc_matrix((n_points,n_points))
     for t in range(0, n_steps):
         # Calculate distances
         if Z is None:
-            dd = _np.array([X, Y]).T
+            dd = _np.array([X[:,t], Y[:,t]]).T
         else:
             dd = _np.array([X, Y, Z]).T
         Tree = _sp.spatial.KDTree(dd)
@@ -471,17 +474,48 @@ def diffMaps(X, Y, Z=None, bounds=None, eps='bgh', r='eps', n_v=20, nn=20):
         i = i.flatten()
         j = idx.flatten()
         dist = dist.flatten()
-        if eps == "bgh":
+        if eps == "bh":
             eps_i = eps_opt(dist)
             print("epsilon estimate: " + str(eps_i))
-            K = _sp.sparse.csc_matrix((_np.exp(-dist**2 / eps_i), (i, j)),
-                                   shape=(n_points, n_points))
         else:
-            K = _sp.sparse.csc_matrix((_np.exp(-dist**2 / eps), (i, j)),
-                                   shape=(n_points, n_points))
+            eps_i = eps
+            
+        K = _sp.sparse.csc_matrix((_np.exp(-dist**2 / eps_i), (i, j)),
+                               shape=(n_points, n_points))
+        K = K + _sp.sparse.identity(n_points) + K.T
+        
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # apply normalization
+            K = K.multiply(1/K.sum(axis=1))# 1/rowsums
+        if not(bounds is None):
+            # Set rows and columns belonging to boundary points to 0 for
+            # absorbing boundary conditions
+            K = K.tolil()
+            K[_np.where(bounds[:,j]==1)[0],:]=0
+            K[:,_np.where(bounds[:,j]==1)[0]]=0
+            K = K.tocsr()
+            K.eliminate_zeros()
 
+        sparsity = _sp.sparse.find(K)[0].shape[0]/(K.shape[0]*K.shape[1])
 
+        print("sparsity(K): {}".format(sparsity))
 
+        P = P + K
+
+    P = 1/n_steps * P
+
+    sparsity = _sp.sparse.find(P)[0].shape[0]/(P.shape[0]*P.shape[1])
+
+    print("sparsity(P) for epsilon {}: {}".format(eps_i, sparsity))
+    try:
+        vals, vecs = _sp.sparse.linalg.eigs(P, k=n_v)
+    except:
+        print("sparse eig algorithm failed, using eig")
+        vals, vecs = _sp.linalg.eig(P.toarray())
+
+    vals = _np.flip(_np.sort(vals))[:n_v]
+    return list((vals, vecs))
 
 def kmeans(x, k, maxIter=100):
     '''

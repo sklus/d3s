@@ -66,3 +66,27 @@ c, l = sp.cluster.vq.kmeans2(np.real(V[:, 0:5]), 5)
 fig = plt.figure()
 plt.scatter(X[0, :], X[1, :], c=l)
 plt.show()
+
+#%% apply diffusion maps algorithm
+
+# because the algorithm works with any number of timesteps, we nee to adjust
+# the data format: X.shape = (n_dim x n_points); Y same but one timestep later
+
+X_coords = _np.vstack((X[0], Y[0])).T  # For x coordinates across timesteps
+Y_coords = _np.vstack((X[1], Y[1])).T  # For y coordinates across timesteps
+
+E = algorithms.diffMaps(X_coords, Y_coords, eps='bh', r=-1)
+
+#%% plot eigenvalues
+plt.figure()
+plt.plot(E[0], 'o')
+plt.show()
+
+#%% k-means of eigenvectors
+
+c, l = sp.cluster.vq.kmeans2(np.real(E[1][:, 0:6]), 5)
+fig = plt.figure()
+plt.scatter(X[0, :], X[1, :], c=l)
+plt.show()
+
+
