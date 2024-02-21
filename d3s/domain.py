@@ -192,4 +192,4 @@ def randb(n, b):
     '''
     Returns an array of n uniformly distributed random values in the interval b.
     '''
-    return b[0] + (b[1] - b[0])*_sp.rand(1, n)
+    return b[0] + (b[1] - b[0])*_np.random.rand(1, n)

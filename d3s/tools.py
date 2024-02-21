@@ -58,6 +58,7 @@ def printMatrix(x, name = None, k = 8):
 
 
 class Timer(object):
+    '''Simple timer class.'''
     def __init__(self, name=None):
         self.name = name
 
