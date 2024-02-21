@@ -106,7 +106,7 @@ class discretization(object):
         x = []
         for i in range(d):
             x.append( _np.linspace(b[i, 0] + h[i]/2, b[i, 1] - h[i]/2, self._boxes[i]) )
-        X = _sp.meshgrid(*x, indexing='ij')
+        X = _np.meshgrid(*x, indexing='ij')
         c = _np.zeros([d, n])
         for i in range(d):
             c[i, :] = X[i].reshape(n)
@@ -122,7 +122,7 @@ class discretization(object):
         x = []
         for i in range(d):
             x.append( _np.linspace(b[i, 0], b[i, 1], self._boxes[i]+1) )
-        X = _sp.meshgrid(*x, indexing='ij')
+        X = _np.meshgrid(*x, indexing='ij')
         c = _np.zeros([d, n])
         for i in range(d):
             c[i, :] = X[i].reshape(n)
