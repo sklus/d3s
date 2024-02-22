@@ -2,13 +2,18 @@
 import numpy as _np
 import scipy as _sp
 import scipy.sparse.linalg
-
+import warnings
+import numbers
+try:
+    from scipy.special import logsumexp
+except ModuleNotFoundError:
+    from scipy.misc import logsumexp
 import d3s.observables as _observables
 import d3s.kernels as _kernels
 
 '''
-The implementations of the methods 
- 
+The implementations of the methods
+
     - DMD, TICA, AMUSE
     - Ulam's method
     - EDMD, kernel EDMD, generator EDMD
@@ -16,9 +21,9 @@ The implementations of the methods
     - kernel PCA, kernel CCA
     - CMD
     - SEBA
- 
+
 are based on the publications listed here:
- 
+
     https://github.com/sklus/d3s
 
 '''
@@ -96,7 +101,7 @@ def dmdc(X, Y, U, svThresh=1e-10):
 def amuse(X, Y, evs=5):
     '''
     AMUSE implementation of TICA, see TICA documentation.
-    
+
     :return:    eigenvalues d and corresponding eigenvectors Phi containing the coefficients for the eigenfunctions
     '''
     U, s, _ = _sp.linalg.svd(X, full_matrices=False)
@@ -190,15 +195,15 @@ def gedmd(X, Y, Z, psi, evs=5, operator='K'):
         S = _np.einsum('ijk,ljk->ilk', Z, Z) # sigma \cdot sigma^T
         for i in range(n):
             dPsiY[i, :] += 0.5*_np.sum( ddPsiX[i, :, :, :] * S, axis=(0,1) )
-    
+
     C_0 = PsiX @ PsiX.T
     C_1 = PsiX @ dPsiY.T
     if operator == 'P': C_1 = C_1.T
 
     A = _sp.linalg.pinv(C_0) @ C_1
-    
+
     d, V = sortEig(A, evs, which='SM')
-    
+
     return (A, d, V)
 
 
@@ -252,18 +257,18 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
 def kpca(X, k, evs=5):
     '''
     Kernel PCA.
-    
+
     :param X:    data matrix, each column represents a data point
     :param k:    kernel
     :param evs:  number of eigenvalues/eigenvectors
     :return:     data X projected onto principal components
     '''
     G = _kernels.gramian(X, k) # Gram matrix
-    
+
     # center Gram matrix
     n = X.shape[1]
     N = _np.eye(n) - 1/n*_np.ones((n, n))
-    G = N @ G @ N    
+    G = N @ G @ N
     d, V = sortEig(G, evs)
     return (d, V)
 
@@ -271,7 +276,7 @@ def kpca(X, k, evs=5):
 def kcca(X, Y, k, evs=5, epsilon=1e-6):
     '''
     Kernel CCA.
-    
+
     :param X:    data matrix, each column represents a data point
     :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
     :param k:    kernel
@@ -281,17 +286,17 @@ def kcca(X, Y, k, evs=5, epsilon=1e-6):
     '''
     G_0 = _kernels.gramian(X, k)
     G_1 = _kernels.gramian(Y, k)
-    
+
     # center Gram matrices
     n = X.shape[1]
     I = _np.eye(n)
     N = I - 1/n*_np.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
-    
+
     A = _sp.linalg.solve(G_0 + epsilon*I, G_0, assume_a='sym') \
       @ _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')
-    
+
     d, V = sortEig(A, evs)
     return (d, V)
 
@@ -299,7 +304,7 @@ def kcca(X, Y, k, evs=5, epsilon=1e-6):
 def cmd(X, Y, evs=5, epsilon=1e-6):
     '''
     Coherent mode decomposition.
-    
+
     :param X:    data matrix, each column represents a data point
     :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
     :param evs:  number of eigenvalues/eigenvectors
@@ -308,88 +313,214 @@ def cmd(X, Y, evs=5, epsilon=1e-6):
     '''
     G_0 = X.T @ X
     G_1 = Y.T @ Y
-    
+
     # center Gram matrices
     n = X.shape[1]
     I = _np.eye(n)
     N = I - 1/n*_np.ones((n, n))
     G_0 = N @ G_0 @ N
     G_1 = N @ G_1 @ N
-    
+
     A = _sp.linalg.solve(G_0 + epsilon*I, _sp.linalg.solve(G_1 + epsilon*I, G_1, assume_a='sym')) @ G_0
-    
+
     d, V = sortEig(A, evs)
     rho = _np.sqrt(d);
     W = _sp.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _sp.diag(rho)
-    
+
     Xi = X @ V
     Eta = Y @ W
-    
+
     return (rho, Xi, Eta)
 
 
 def seba(V, R0=None, maxIter=5000):
     '''
-    Sparse eigenbasis approximation as described in 
-    
+    Sparse eigenbasis approximation as described in
+
     "Sparse eigenbasis approximation: Multiple feature extraction across spatiotemporal scales with
     application to coherent set identification" by G. Froyland, C. Rock, and K. Sakellariou.
-    
+
     Based on the original Matlab implementation, see https://github.com/gfroyland/SEBA.
-    
+
     :param V:        eigenvectors
     :param R0:       optional initial rotation
     :param maxIter:  maximum number of iterations
     :return:         sparse basis output
-    
+
     TODO: perturb near-constant vectors?
     '''
     n, r = V.shape
-    
+
     V, _ = _sp.linalg.qr(V, mode='economic')
     mu = 0.99/_np.sqrt(n)
-    
+
     if R0 == None:
         R0 = _np.eye(r)
     else:
         R0, _ = _sp.linalg.polar(R0)
-    
+
     S = _np.zeros((n, r))
-    
+
     for i in range(maxIter):
         Z = V @ R0.T
-        
+
         # threshold
         for j in range(r):
             S[:, j] = _np.sign(Z[:, j]) * _np.maximum(abs(Z[:, j]) - mu, 0)
             S[:, j] = S[:, j]/_sp.linalg.norm(S[:, j])
-        
+
         # polar decomposition
         R1, _ = _sp.linalg.polar(S.T @ V)
-        
+
         # check whether converged
         if _sp.linalg.norm(R1 - R0) < 1e-14:
             break
-        
+
         # overwrite initial matrix with new matrix
         R0 = R1.copy()
-    
+
     # choose correct parity and normalize
     for j in range(r):
         S[:, j] = S[:, j] * _np.sign(S[:, j].sum())
         S[:, j] = S[:, j] / _np.amax(S[:, j])
-    
+
     # sort vectors
     ind = _np.argsort(_np.min(S, axis=0))[::-1]
     S = S[:, ind]
-        
+
     return S
 
+def diffMaps(X, Y, Z=None, bounds=None, eps='bh', r='eps', n_v=20, nn=20):
+    '''
+    Finding coherent sets with diffusion maps. Based on
+    Banisch, Ralf and P´eter Koltai (Mar. 2017). “Understanding the Geometry of
+    Transport: Diffusion Maps for Lagrangian Trajectory Data Unravel Coherent
+    Sets”. In: Chaos 27.3, p. 035804. issn: 1054-1500, 1089-7682. doi: 10.1063/
+    1.4971788.
+
+    :param X:    data matrix, x-coordinates, shape:n_points x n_timesteps
+    :param Y:    data matrix, y-coordinates, shape:n_points x n_timesteps
+    :param Z:    data matrix, z-coordinates, shape:n_points x n_timesteps
+    :param bounds: Indication vector (0 or 1; FALSE or TRUE) for boundary 
+                 points; will set absorbing bc at indicated points (those at
+                 whose index the vector contains 1 or TRUE) instead of 
+                 reflecting bc
+    :param eps:  diffusion bandwidth, either a number or 'bh' for automatic
+                 choice as in [1]
+    :param r:    Cut-off radius for nearest neighbor search, either a number or
+                 'eps' to choose r=3*sqrt(eps)
+    :param n_v:  number of Eigenvalues/vectors to return
+    :param nn:   number of nearest neighbors to query
+    :return:     (Eigenvalues, Eigenvectors)
+
+    [1] Berry, Tyrus, and John Harlim. “Variable Bandwidth Diffusion Kernels.” 
+    Applied and Computational Harmonic Analysis 40, no. 1 (January 2016): 
+        68–96. https://doi.org/10.1016/j.acha.2015.01.001.
+
+
+    '''
+
+    def eps_opt(dist, epsilons=None):
+        '''
+        Find optimal epsilon based on method mentioned above. Largely follows
+        https://github.com/DiffusionMapsAcademics/pyDiffMap
+
+        :param dist:    Distances
+        :epsilons:      epsilon values to evaluate
+        :return:        optimal epsilon
+
+        '''
+        if epsilons is None:
+            epsilons = 2**_np.arange(-40., 41., 1.)
+
+        epsilons = _np.sort(epsilons).astype('float')
+        log_T = [logsumexp(-dist**2/(eps)) for eps in epsilons]
+        log_eps = _np.log(epsilons)
+        log_deriv = _np.diff(log_T)/_np.diff(log_eps)
+        max_loc = _np.argmax(log_deriv)
+        epsilon = _np.exp(log_eps[max_loc])
+        return epsilon
+
+    if not(isinstance(eps, numbers.Number) or eps=="bh"):
+        raise ValueError("Epsilon has to be a number or string \"bh\"")
+
+    if r=="eps":
+        if isinstance(eps, numbers.Number):
+            r = 3*_np.sqrt(eps)
+        else:
+            warnings.warn("Cut-Off radius has to be applied before" +
+                          " diffusion similarity matrix construction. With " +
+                          "BH method eps is not known then. No cut-off " +
+                          "radius applied.")
+            r = -1
+    elif not isinstance(r, numbers.Number):
+        raise ValueError("Need to supply a number or string \"eps\" to r")
+
+    n_points, n_steps = X.shape
+    P = _sp.sparse.csc_matrix((n_points,n_points))
+    for t in range(0, n_steps):
+        # Calculate distances
+        if Z is None:
+            dd = _np.array([X[:,t], Y[:,t]]).T
+        else:
+            dd = _np.array([X, Y, Z]).T
+        Tree = _sp.spatial.KDTree(dd)
+        if r == -1:
+            dist, idx = Tree.query(dd, k=nn)
+        dist, idx = Tree.query(dd, k=nn, distance_upper_bound=r)
+
+        # Calculate diffusion similarity matrix
+        i, j = _np.indices(dist.shape)
+        i = i.flatten()
+        j = idx.flatten()
+        dist = dist.flatten()
+        if eps == "bh":
+            eps_i = eps_opt(dist)
+            print("epsilon estimate: " + str(eps_i))
+        else:
+            eps_i = eps
+            
+        K = _sp.sparse.csc_matrix((_np.exp(-dist**2 / eps_i), (i, j)),
+                               shape=(n_points, n_points))
+        K = K + _sp.sparse.identity(n_points) + K.T
+        
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            # apply normalization
+            K = K.multiply(1/K.sum(axis=1))# 1/rowsums
+        if not(bounds is None):
+            # Set rows and columns belonging to boundary points to 0 for
+            # absorbing boundary conditions
+            K = K.tolil()
+            K[_np.where(bounds[:,j]==1)[0],:]=0
+            K[:,_np.where(bounds[:,j]==1)[0]]=0
+            K = K.tocsr()
+            K.eliminate_zeros()
+
+        sparsity = _sp.sparse.find(K)[0].shape[0]/(K.shape[0]*K.shape[1])
+
+        print("sparsity(K): {}".format(sparsity))
+
+        P = P + K
+
+    P = 1/n_steps * P
+
+    sparsity = _sp.sparse.find(P)[0].shape[0]/(P.shape[0]*P.shape[1])
+
+    print("sparsity(P) for epsilon {}: {}".format(eps_i, sparsity))
+    try:
+        vals, vecs = _sp.sparse.linalg.eigs(P, k=n_v)
+    except:
+        print("sparse eig algorithm failed, using eig")
+        vals, vecs = _sp.linalg.eig(P.toarray())
+
+    vals = _np.flip(_np.sort(vals))[:n_v]
+    return list((vals, vecs))
 
 def kmeans(x, k, maxIter=100):
     '''
     Simple k-means implementation.
-    
+
     :param x: data matrix, each column is a data point
     :param k: number of clusters
     :param maxIter: maximum number of iterations
@@ -402,15 +533,15 @@ def kmeans(x, k, maxIter=100):
         D = _sp.spatial.distance.cdist(x.T, c.T)
         l1 = D.argmin(axis=1)
         return l1
-    
+
     d, m = x.shape # number of dimensions and data points
     l0 = _np.random.randint(0, k, size=m) # initial cluster assignments
-    
+
     it = 0
     while it < maxIter:
         l1 = update(l0)
         it += 1
-      
+
         if (l1 == l0).all():
             print('k-means converged after %d iterations.' % it)
             return l1
