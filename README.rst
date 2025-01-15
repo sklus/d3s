@@ -7,6 +7,7 @@ This toolbox contains methods for the approximation of transfer operators and th
 - Ulam's method
 - EDMD, kernel EDMD, generator EDMD
 - SINDy
+- QENDy
 - kernel PCA, kernel CCA
 - CMD
 - SEBA
@@ -27,6 +28,7 @@ The algorithms are implemented based on the following publications:
 - \ S. Klus, F. Nüske, P. Koltai, H. Wu, I. Kevrekidis, C. Schütte, and F. Noé. *Data-driven model reduction and transfer operator approximation.*
 - \ S. Klus, I. Schuster, and K. Muandet. *Eigendecompositions of transfer operators in reproducing kernel Hilbert spaces.*
 - \ S. Klus, B. E. Husic, and M. Mollenhauer: *Kernel canonical correlation analysis approximates operators for the detection of coherent structures in dynamical data.*
+- \ S. Klus and J.-P. N'Konzi: *Data-driven system identification using quadratic embeddings of nonlinear dynamics.*
 
 ====
 
