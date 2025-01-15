@@ -13,6 +13,7 @@ The implementations of the methods
     - Ulam's method
     - EDMD, kernel EDMD, generator EDMD
     - SINDy
+    - QENDy
     - kernel PCA, kernel CCA
     - CMD
     - SEBA
@@ -44,53 +45,6 @@ def dmd(X, Y, mode='exact'):
         raise ValueError('Only exact and standard DMD available.')
 
     return d, Phi
-
-
-def dmdc(X, Y, U, svThresh=1e-10):
-    '''
-    DMD + control where control matrix B is unknown, https://arxiv.org/abs/1409.6358
-    :param X: State matrix in Reals NxM-1, where N is dim of state vector, M is number of samples
-    :param Y: One step time-laged state matrix in Reals NxM-1
-    :param U: Control input matrix, in Reals QxM-1, where Q is dim of control vector
-    :param svThresh: Threshold below which to discard singular values
-    :return: A_approx, B_approx, Phi  (where Phi are dynamic modes of A)
-    '''
-    n = X.shape[0] # size of state vector
-    q = U.shape[0] # size of control vector
-
-    # Y = G * Gamma
-    Omega = scipy.vstack((X, U))
-    U, svs, V = scipy.linalg.svd(Omega)
-    V = V.T
-    svs_to_keep = svs[scipy.where(svs > svThresh)] # todo: ensure exist svs that are greater than thresh
-    n_svs = len(svs_to_keep)
-    Sigma_truncated = scipy.diag(svs_to_keep)
-    U_truncated = U[:, :n_svs]
-    V_truncated = V[:, :n_svs]
-
-    U2, svs2, V2 = scipy.linalg.svd(Y, full_matrices=False)
-    V2 = V2.T
-    svs_to_keep2 = svs2[scipy.where(svs2 > svThresh)]
-    n_svs2 = len(svs_to_keep2)
-    Sigma2_truncated = scipy.diag(svs_to_keep2)
-    U2_truncated = U2[:, :n_svs2]
-    V2_truncated = V2[:, :n_svs2]
-
-    # separate into POD modes for A, B matrices
-    UA = U_truncated[:n, :]
-    UB = U_truncated[n:, :]
-
-    A_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UA.T @ U2_truncated
-    B_approx = U2_truncated.T @ Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UB.T
-
-    # eigendecomposition of A_approx
-    w, _ = scipy.linalg.eig(A_approx)
-    W = scipy.diag(w)
-
-    # compute dynamic modes of A
-    Phi = Y @ V_truncated @ scipy.linalg.inv(Sigma_truncated) @ UA.T @ U2_truncated @ W
-
-    return A_approx, B_approx, Phi
 
 
 def amuse(X, Y, evs=5):
@@ -247,6 +201,49 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
             b = ~s[ind, :] # consider only functions corresponding to coefficients greater than eps
             Xi[ind, b] = Y[ind, :] @ _sp.linalg.pinv(PsiX[b, :])
     return Xi
+
+
+def qendy(X, dX, psi, epsilon=0):
+    '''
+    Quadratic embedding of nonlinear dynamics.
+    
+    :param X:        training data points
+    :param dX:       corresponding time derivatives
+    :param psi:      set of basis functions, see d3s.observables
+    :param epsilon:  regularization parameter
+    :return:         A, B, and C
+    '''
+    # compute data matrices
+    Z1 = psi(X)
+    N, m = Z1.shape # N: number of basis functions, m: number of data points
+    
+    Z2 = _np.zeros((N**2, m))
+    for i in range(m):
+        Z2[:, i] = _np.kron(Z1[:, i], Z1[:, i])
+    
+    dZ = _np.einsum('ijk,jk->ik', psi.diff(X), dX)
+    
+    # construct block matrix and compute its pseudoinverse
+    R = _np.block([[Z2 @ Z2.T + epsilon*_np.eye(N**2), Z2 @ Z1.T, Z2 @ _np.ones((m, 1))],
+                   [Z1 @ Z2.T, Z1 @ Z1.T, Z1 @ _np.ones((m, 1))],
+                   [_np.ones((1, m)) @ Z2.T, _np.ones((1, m)) @ Z1.T, m]])
+    R_p = _sp.linalg.pinv(R)
+    
+    # compute A, B, and C row by row
+    A = _np.zeros((N, N**2))
+    B = _np.zeros((N, N))
+    C = _np.zeros((N, 1))
+    for i in range(N):
+        s_i = _np.hstack(( Z2 @ dZ[i, :].T, Z1 @ dZ[i, :].T, _np.ones((1, m)) @ dZ[i, :].T )) # right-hand side
+        x = R_p @ s_i # solve system of linear equations
+        A[i, :] = x[:N**2]
+        B[i, :] = x[N**2:N**2+N]
+        C[i, :] = x[-1]
+    
+    e = _np.linalg.norm(dZ - A @ Z2 - B @ Z1 - C @ _np.ones((1, m)), 'fro')
+    print(f'QENDy regression error: {e}')
+    
+    return A, B, C
 
 
 def kpca(X, k, evs=5):
