@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import scipy as sp
 import scipy.io
 import matplotlib.pyplot as plt

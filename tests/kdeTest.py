@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -50,7 +48,6 @@ plt.plot(c.flatten(), V.flatten(), 'b')
 plt.figure()
 plt.plot(c.flatten(), -gradVk.flatten(), 'r')
 plt.plot(c.flatten(), -alpha*c.flatten(), 'b')
-
 
 #%% Double-well potential -------------------------------------------------------------------------
 

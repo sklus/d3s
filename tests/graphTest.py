@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -8,6 +6,8 @@ import d3s.networks as networks
 
 import d3s.algorithms as algorithms
 from d3s.tools import printVector, printMatrix
+
+## TODO: FIX BUG!
 
 #%% Simple guiding example ------------------------------------------------------------------------
 

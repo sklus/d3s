@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as _np
 from scipy.spatial import distance
 
@@ -313,18 +311,3 @@ class densityEstimate(object):
                 y[:, i] = y[:, i] + (x[:, i] - self.X[:, j])*G2[i, j]
             y[:, i] =  1/(self.beta*self.rho(x[:, i, None])) * self.c/(self.n * self.k.sigma**2)*y[:, i]
         return y
-    
-    # def rho(self, x):
-    #     y = 0
-    #     for i in range(self.n):
-    #         y = y + self.k(x, self.X[:, i])
-    #     return self.c/self.n * y
-    
-    # def V(self, x):
-    #     return -1/self.beta * _np.log(self.rho(x))
-    
-    # def gradV(self, x):
-    #     y = _np.zeros((self.d,))
-    #     for i in range(self.n):
-    #         y = y + self.k.diff(x, self.X[:, i])
-    #     return -1/(self.beta*self.rho(x)) * self.c/self.n * y

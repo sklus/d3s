@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as _np
 import scipy as _sp
 import scipy.cluster
@@ -25,13 +24,13 @@ class graph(object):
     
     def randomWalk(self, x0, m):
         '''
-        Generate random walk of length m.
+        Generate random walk of length m starting in x0.
         '''
         P = self.transitionMatrix('rw')
         v = _np.arange(self.n) # vertices
-        x = _np.zeros(m, dtype=_np.uint64)
+        x = _np.zeros(m+1, dtype=_np.uint64)
         x[0] = x0
-        for i in range(1, m):
+        for i in range(1, m+1):
             x[i] = _np.random.choice(v, p=P[x[i-1], :])
         return x
     
@@ -70,19 +69,19 @@ class graph(object):
         A = self.A - _np.diag(_np.diag(self.A)) # remove self-loops
         
         if self.isSymmetric():
-            G = _nx.from_numpy_matrix(A)
+            G = _nx.from_numpy_array(A)
         else:
-            G = _nx.from_numpy_matrix(A, create_using=_nx.DiGraph)
+            G = _nx.from_numpy_array(A, create_using=_nx.DiGraph)
             
         if pos is None:
             # pos = nx.spring_layout(G)
             pos = _nx.nx_agraph.graphviz_layout(G, prog='neato')
         
         if c is None:
-            _nx.draw(G, pos, node_size=500, with_labels=True, font_size=10)
+            _nx.draw_networkx(G, pos, node_size=500, with_labels=True, font_size=10)
         else:
             col = [graph.colors[i] for i in c]
-            _nx.draw(G, pos, node_color=col, node_size=500, with_labels=True, font_size=10)
+            _nx.draw_networkx(G, pos, node_color=col, node_size=500, with_labels=True, font_size=10)
             
     def spectralClustering(self, nc, variant='rw'):
         P = self.transitionMatrix(variant)
@@ -101,6 +100,21 @@ class tgraph(object):
     
     def __getitem__(self, t):
         return graph(self.A[:, :, t])
+    
+    def randomWalk(self, x0, m):
+        '''
+        Generate random walk of length m in each graph.
+        '''
+        for t in range(self.T):
+            x = self[t].randomWalk(x0, m)
+            if t == 0:
+                y = x[:-1]
+            elif t == self.T-1:
+                y = _np.hstack([y, x])
+            else:
+                y = _np.hstack([y, x[:-1]])
+            x0 = x[-1]
+        return y
     
     def spectralClustering(self, nc):
         P = _np.eye(self.n)

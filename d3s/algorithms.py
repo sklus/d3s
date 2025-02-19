@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as _np
 import scipy as _sp
 import scipy.sparse.linalg
@@ -33,12 +32,12 @@ def dmd(X, Y, mode='exact'):
     :return:     eigenvalues d and modes Phi
     '''
     U, s, Vt = _sp.linalg.svd(X, full_matrices=False)
-    S_inv = _sp.diag(1/s)
+    S_inv = _np.diag(1/s)
     A = U.T @ Y @ Vt.T @ S_inv
     d, W = sortEig(A, A.shape[0])
 
     if mode == 'exact':
-        Phi = Y @ Vt.T @ S_inv @ W @ _sp.diag(1/d)
+        Phi = Y @ Vt.T @ S_inv @ W @ _np.diag(1/d)
     elif mode == 'standard':
         Phi = U @ W
     else:
@@ -54,7 +53,7 @@ def amuse(X, Y, evs=5):
     :return:    eigenvalues d and corresponding eigenvectors Phi containing the coefficients for the eigenfunctions
     '''
     U, s, _ = _sp.linalg.svd(X, full_matrices=False)
-    S_inv = _sp.diag(1/s)
+    S_inv = _np.diag(1/s)
     Xp = S_inv @ U.T @ X
     Yp = S_inv @ U.T @ Y
     K = Xp @ Yp.T
@@ -317,7 +316,7 @@ def cmd(X, Y, evs=5, epsilon=1e-6):
     
     d, V = sortEig(A, evs)
     rho = _np.sqrt(d);
-    W = _sp.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _sp.diag(rho)
+    W = _sp.linalg.solve(G_1 + epsilon*I, G_0) @ V @ _np.diag(rho)
     
     Xi = X @ V
     Eta = Y @ W
@@ -338,8 +337,6 @@ def seba(V, R0=None, maxIter=5000):
     :param R0:       optional initial rotation
     :param maxIter:  maximum number of iterations
     :return:         sparse basis output
-    
-    TODO: perturb near-constant vectors?
     '''
     n, r = V.shape
     

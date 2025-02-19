@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as np
 import scipy as sp
 import scipy.io
@@ -49,7 +47,7 @@ evs = 4 # number of eigenfunctions to be computed
 
 # define kernel and regularization parameter
 sigma = np.sqrt(2)
-epsilon = 0
+epsilon = 0.01
 k = kernels.gaussianKernel(sigma)
 
 # Perron-Frobenius

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -136,7 +134,7 @@ c = Omega.midpointGrid()
 
 #% % Ulam for Perron-Frobenius
 phi = observables.gaussians(Omega, 0.5)
-P, d, V = edmd(X, Y, phi, evs, operator='P')
+P, d, V = algorithms.edmd(X, Y, phi, evs, operator='P')
 
 W = V.T @ phi(c)
 
@@ -161,13 +159,3 @@ for i in range(evs):
     wa = psi[i](c)*mu/psi[0](c)
     wa = wa/np.amax(abs(wa))
     plt.plot(c.T, wa.T) 
-
-#%%
-for i in range(evs):
-    w = np.real(W[i, :])
-    w = w/np.amax(abs(w))
-    mat.plot(c, w)
-    
-    wa = psi[i](c)*mu/psi[0](c)
-    wa = wa/np.amax(abs(wa))
-    mat.plot(c, wa)

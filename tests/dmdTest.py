@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+import numpy as np
 import scipy as sp
 import scipy.io
 import matplotlib.pyplot as plt
@@ -27,6 +26,6 @@ d, V = algorithms.dmd(X, Y)
 #%% plot DMD modes
 for i in range(10):
     plt.figure()
-    v = sp.real(V[:, i].reshape(nx, ny))
+    v = np.real(V[:, i].reshape(nx, ny))
     plt.imshow(v)
 plt.show()

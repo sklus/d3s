@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import numpy as _np
 import scipy as _sp
 
@@ -9,7 +8,6 @@ import matplotlib.pyplot
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 
 from d3s.tools import indexS2M, indexM2S
-
 
 class discretization(object):
     '''

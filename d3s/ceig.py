@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as _np
 import scipy as _sp
 import d3s.algorithms as algorithms

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -114,7 +112,7 @@ for i in range(m-6, m):
     plt.scatter(X, np.real(V[:, i]/np.amax(abs(V[:, i]))))
     plt.title('%f' % np.real(d[i]))
 
-#%% reversible formulation (only first one or two eigenvalues are estimated accurately)
+#%% reversible formulation (only the first one or two eigenvalues are estimated accurately)
 m  = 2000
 f = systems.OrnsteinUhlenbeck(1e-3, 1000)
 X = f.getTrajectory(np.zeros((1, 1)), m)
@@ -228,7 +226,7 @@ G_00 = kernels.gramian(X, k)
 G_10 = np.zeros((m, m))
 for i in range(m):
     for j in range(m):
-        G_10[i, j] = c0(X[:, i]) * k(X[:, i], X[:, j]) + np.sum( c2(X[:, i]) * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
+        G_10[i, j] = c0(X[0, i]) * k(X[:, i], X[:, j]) + np.sum( c2(X[:, i]) * k.ddiff(X[:, i], X[:, j]), axis=(0,1) )
 
 A, _, _, _ = np.linalg.lstsq(G_00, G_10, rcond=1e-12)
 d, V = algorithms.sortEig(A, evs=m, which='LM')
