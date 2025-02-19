@@ -406,7 +406,7 @@ def kmeans(x, k, maxIter=100):
         it += 1
       
         if (l1 == l0).all():
-            print('k-means converged after %d iterations.' % it)
+            print(f'k-means converged after {it} iterations.')
             return l1
         l0 = l1
     print('k-means did not converge.')

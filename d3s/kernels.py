@@ -219,7 +219,6 @@ def gramian(X, k):
                 G[j, i] = G[i, j]
         return G
     else:
-        #print('User-defined kernel.')
         if isinstance(X, list): # e.g., for strings
             n = len(X)
             G = _np.zeros([n, n])
@@ -241,13 +240,10 @@ def gramian2(X, Y, k):
     '''Compute Gram matrix for training data X and Y with kernel k.'''
     name = k.__class__.__name__
     if name == 'gaussianKernel':
-        #print('Gaussian kernel with sigma = %f.' % k.sigma)
         return _np.exp(-distance.cdist(X.T, Y.T, 'sqeuclidean')/(2*k.sigma**2))
     elif name == 'laplacianKernel':
-        #print('Laplacian kernel with sigma = %f.' % k.sigma)
         return _np.exp(-distance.cdist(X.T, Y.T, 'euclidean')/k.sigma)
     elif name == 'polynomialKernel':
-        #print('Polynomial kernel with degree = %f and c = %f.' % (k.p, k.c))
         return (k.c + X.T@Y)**k.p
     elif name == 'stringKernel':
         m = len(X)
@@ -265,7 +261,6 @@ def gramian2(X, Y, k):
                 G[i, j] = k.evaluate(X[i], Y[j]) / _np.sqrt(dx[i]*dy[j])
         return G
     else:
-        # print('User-defined kernel.')
         if isinstance(X, list): # e.g., for strings
             m = len(X)
             n = len(Y)

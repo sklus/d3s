@@ -101,12 +101,12 @@ class monomials(object):
         
         for i in range(k):
             if i == 0:
-                print('%.5f' % alpha[ind[i]], end = '')
+                print(f'{alpha[ind[i]]:.4f}', end = '')
             else:
                 if alpha[ind[i]] > 0:
-                    print(' + %.5f' % alpha[ind[i]], end = '')
+                    print(f' + {alpha[ind[i]]:.4f}', end = '')
                 else:
-                    print(' - %.5f' % -alpha[ind[i]], end = '')
+                    print(f' - {-alpha[ind[i]]:.4f}', end = '')
                         
             self._displayMonomial(c[:, ind[i]])
         print('')
@@ -120,9 +120,9 @@ class monomials(object):
                 if p[j] == 0:
                     continue;
                 if p[j] == 1:
-                    print(' x_%d' % (j+1), end = '')
+                    print(f' x_{j+1}', end = '')
                 else:
-                    print(' x_%d^%d' % (j+1, p[j]), end = '')
+                    print(f' x_{j+1}^{int(p[j])}', end = '')
 
 class indicators(object):
     '''

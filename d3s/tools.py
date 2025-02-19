@@ -21,7 +21,7 @@ def printVector(x, name = None, k = 8):
     if name != None:
         print(name + ' = ')
     while c < n:
-        print('\033[94m  (columns %s through %s)\033[0m' % (c, min(c+k, n)-1))
+        print(f'\033[94m  (columns {c} through {min(c+k, n)-1})\033[0m')
         for j in range(c, min(c+k, n)):
             if isReal:
                 print(f'  {x[j]: 10.5f}', end = '')
@@ -41,7 +41,7 @@ def printMatrix(x, name = None, k = 8):
     if name != None:
         print(name + ' = ')
     while c < n:
-        print('\033[94m  (columns %s through %s)\033[0m' % (c, min(c+k, n)-1))
+        print(f'\033[94m  (columns {c} through {min(c+k, n)-1})\033[0m')
         for i in range(m):
             for j in range(c, min(c+k, n)):
                 if isReal:
@@ -64,8 +64,8 @@ class Timer(object):
 
     def __exit__(self, type, value, traceback):
         if self.name:
-            print('%s: ' % self.name, end = '')
-        print('%s s' % (_time.time() - self.tstart))
+            print(f'{self.name}: ', end = '')
+        print(f'{(_time.time() - self.tstart):.3f} s')
 
 
 class matmux(object):
