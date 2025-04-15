@@ -7,8 +7,6 @@ import d3s.networks as networks
 import d3s.algorithms as algorithms
 from d3s.tools import printVector, printMatrix
 
-## TODO: FIX BUG!
-
 #%% Simple guiding example ------------------------------------------------------------------------
 
 # construct adjacency matrix
@@ -84,7 +82,7 @@ for t in range(n_t):
     G_t = G[t]
     
     for j in range(m):
-        z = G_t.randomWalk(Z[j, 10*t], 10)
+        z = G_t.randomWalk(Z[j, 10*t], 9)
         Z[j, 10*t+1:10*t+11] = z
     
     G_t.draw(pos=pos)

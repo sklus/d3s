@@ -204,7 +204,48 @@ def sindy(X, Y, psi, eps=0.001, iterations=10):
 
 def qendy(X, dX, psi, epsilon=0):
     '''
-    Quadratic embedding of nonlinear dynamics.
+    Quadratic embedding of nonlinear dynamics (regression formulation).
+    
+    :param X:        training data points
+    :param dX:       corresponding time derivatives
+    :param psi:      set of basis functions, see d3s.observables
+    :param epsilon:  regularization parameter
+    :return:         A, B, and C
+    '''
+    # compute data matrices
+    Z1 = psi(X)
+    N, m = Z1.shape # N: number of basis functions, m: number of data points
+    
+    Z2 = _np.zeros((N**2, m))
+    for i in range(m):
+        Z2[:, i] = _np.kron(Z1[:, i], Z1[:, i])
+    
+    dZ = _np.einsum('ijk,jk->ik', psi.diff(X), dX)
+    
+    # construct block matrix and compute its pseudoinverse
+    R = _np.hstack((Z2.T, Z1.T, _np.ones((m, 1))))
+    R_p = _sp.linalg.pinv(R)
+    
+    # compute A, B, and C row by row
+    A = _np.zeros((N, N**2))
+    B = _np.zeros((N, N))
+    C = _np.zeros((N, 1))
+    for i in range(N):
+        s_i = dZ[i, :].T # right-hand side
+        x = _sp.linalg.lstsq(R, s_i)[0] # solve system of linear equations
+        A[i, :] = x[:N**2]
+        B[i, :] = x[N**2:N**2+N]
+        C[i, :] = x[-1]
+    
+    e = _np.linalg.norm(dZ - A @ Z2 - B @ Z1 - C @ _np.ones((1, m)), 'fro')
+    print(f'QENDy regression error: {e}')
+    
+    return A, B, C
+
+
+def qendy_ne(X, dX, psi, epsilon=0):
+    '''
+    Quadratic embedding of nonlinear dynamics (normal equation form).
     
     :param X:        training data points
     :param dX:       corresponding time derivatives
@@ -264,13 +305,34 @@ def kpca(X, k, evs=5):
     return (d, V)
 
 
+def cca(X, Y, psi, evs=5):
+    '''
+    Nonlinear CCA.
+
+    :param X:    data matrix, each column represents a data point
+    :param Y:    time-lagged data, each column y_i is x_i mapped forward by the dynamical system
+    :param psi:  set of basis functions, see d3s.observables
+    :param evs:  number of eigenvalues/eigenvectors
+    :return:     eigenvalues d and corresponding eigenvectors V containing the coefficients for the eigenfunctions
+    '''
+    PsiX = psi(X)
+    PsiY = psi(Y)
+    C_00 = PsiX @ PsiX.T
+    C_01 = PsiX @ PsiY.T
+    C_11 = PsiY @ PsiY.T
+
+    A = _sp.linalg.pinv(C_00) @ C_01 @ _sp.linalg.pinv(C_11) @ C_01.T
+    d, V = sortEig(A, evs)
+    return (d, V)
+
+
 def kcca(X, Y, k, evs=5, epsilon=1e-6):
     '''
     Kernel CCA.
     
     :param X:    data matrix, each column represents a data point
-    :param Y:    lime-lagged data, each column y_i is x_i mapped forward by the dynamical system
-    :param k:    kernel
+    :param Y:    time-lagged data, each column y_i is x_i mapped forward by the dynamical system
+    :param k:    kernel, see d3s.kernels
     :param evs:  number of eigenvalues/eigenvectors
     :epsilon:    regularization parameter
     :return:     nonlinear transformation of the data X
