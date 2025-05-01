@@ -137,7 +137,6 @@ class indicators(object):
         y = _np.zeros([n, m])
         for i in range(m):
             ind = self.Omega.index(x[:, i])
-            pass
             if ind == -1:
                 continue
             y[ind, i] = 1
@@ -201,6 +200,54 @@ class gaussians(object):
 
     def __repr__(self):
         return 'Gaussian functions for box discretization with bandwidth %f.' % self.sigma
+
+
+class voronoiOnSphere(object):
+    '''
+    Indicator functions for a Voronoi discretization of the unit sphere.
+    '''
+    def __init__(self, m):
+        self.C = self._equidistantOnSphere(m) # centers of Voronoi cells
+        self.n_c = self.C.shape[1] # number of cells
+
+    def __call__(self, x):
+        d, m = x.shape # d = dimension of state space, m = number of test points
+        n = self.n_c # number of basis functions (i.e., number of Voronoi cells)
+        D = _np.arccos(self.C.T @ x) # geodesic distances between centers and points.
+        ind = D.argmin(axis=0) # indices of closest points
+        
+        y = _np.zeros([n, m])
+        for i in range(m):
+            y[ind[i], i] = 1
+        return y
+
+    def __repr__(self):
+        return 'Indicator functions for a Voronoi discretization of the unit sphere.'
+    
+    def _equidistantOnSphere(self, n):
+        '''
+        Generates approximately n almost equidistant points on the unit sphere.
+        
+        See https://www.cmu.edu/biolphys/deserno/pdf/sphere_equi.pdf.
+
+        '''
+        a = 4.0*_np.pi / n
+        d = _np.sqrt(a)
+        M_theta = int(_np.round(_np.pi / d))
+        d_theta = _np.pi / M_theta
+        d_phi = a / d_theta
+        x = []
+        y = []
+        z = []
+        for i in range(M_theta):
+            theta = _np.pi*(i + 0.5) / M_theta
+            M_phi = int(_np.round(2 * _np.pi * _np.sin(theta) / d_phi))
+            for j in range(M_phi):
+                phi = 2*_np.pi * j / M_phi
+                x.append(_np.sin(theta) * _np.cos(phi))
+                y.append(_np.sin(theta) * _np.sin(phi))
+                z.append(_np.cos(theta))
+        return _np.array([x, y, z])
 
 
 # auxiliary functions
