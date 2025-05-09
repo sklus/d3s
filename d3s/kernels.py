@@ -5,17 +5,22 @@ class gaussianKernel(object):
     '''Gaussian kernel with bandwidth sigma.'''
     def __init__(self, sigma):
         self.sigma = sigma
+    
     def __call__(self, x, y):
         return _np.exp(-_np.linalg.norm(x-y)**2/(2*self.sigma**2))
+    
     def diff(self, x, y):
         return -1/self.sigma**2*(x-y) * self(x, y)
+    
     def ddiff(self, x, y):
         d = 1 if x.ndim == 0 else x.shape[0]
         return (1/self.sigma**4*_np.outer(x-y, x-y) - 1/self.sigma**2 *_np.eye(d)) * self(x, y)
+    
     def laplace(self, x, y):
         return (1/self.sigma**4*_np.linalg.norm(x-y)**2 - len(x)/self.sigma**2) * self(x, y)
+    
     def __repr__(self):
-        return 'Gaussian kernel with bandwidth sigma = %f.' % self.sigma
+        return f'Gaussian kernel with bandwidth sigma = {self.sigma}.'
 
 
 class gaussianKernelGeneralized(object):
@@ -23,37 +28,47 @@ class gaussianKernelGeneralized(object):
     def __init__(self, sigma):
         self.sigma = sigma
         self.D = _np.diag(1/(2*sigma**2))
+    
     def __call__(self, x, y):
         xy = _np.squeeze(x-y) # (d, 1) vs. (d, )
         return _np.exp(-xy.T @ self.D @ xy )
+    
     def diff(self, x, y):
         return -2*self.D @ (x-y) * self(x, y)
+    
     def ddiff(self, x, y):
         return (_np.outer(2*self.D@(x-y), 2*self.D@(x-y)) - 2*self.D) * self(x, y)
+    
     def laplace(self, x, y):
         return (_np.linalg.norm(2*self.D@(x-y))**2 - 2*_np.trace(self.D)) * self(x, y)
+    
     def __repr__(self):
-        return 'Generalized Gaussian kernel with bandwidths '+_np.array_str(self.sigma)+'.'
+        return f'Generalized Gaussian kernel with bandwidths {self.sigma}.'
 
 
 class laplacianKernel(object):
     '''Laplacian kernel with bandwidth sigma.'''
     def __init__(self, sigma):
         self.sigma = sigma
+    
     def __call__(self, x, y):
         return _np.exp(-_np.linalg.norm(x-y)/self.sigma)
+    
     def diff(self, x, y):
         return -1/self.sigma*(x - y) / _np.linalg.norm(x-y) * self(x, y)
+    
     def ddiff(self, x, y):
         # TODO: check x \ne y
         n_xy = _np.linalg.norm(x-y)
         return ( (1/(self.sigma**2*n_xy**2) + 1/(self.sigma*n_xy**3)) * _np.outer(x-y, x-y) - 1/(self.sigma*n_xy)*_np.eye(x.shape[0]) ) * self(x, y)
+    
     def laplace(self, x, y):
         # TODO: check x \ne y
         n_xy = _np.linalg.norm(x-y)
         return ( 1/self.sigma**2 + (1-len(x))/(self.sigma*n_xy)) * self(x, y)
+    
     def __repr__(self):
-        return 'Laplacian kernel with bandwidth sigma = %f.' % self.sigma
+        return f'Laplacian kernel with bandwidth sigma = {self.sigma}.'
 
 
 class polynomialKernel(object):
@@ -61,24 +76,29 @@ class polynomialKernel(object):
     def __init__(self, p, c=1):
         self.p = p
         self.c = c
+    
     def __call__(self, x, y):
         if x.ndim == 0:
             return (self.c + x * y)**self.p
         return (self.c + x.T @ y)**self.p
+    
     def diff(self, x, y):
         if x.ndim == 0:
             return self.p*(self.c + x * y)**(self.p-1)*y;
         return self.p*(self.c + x.T @ y)**(self.p-1)*y;
+    
     def ddiff(self, x, y):
         if x.ndim == 0:
             return self.p*(self.p-1)*(self.c + x.T * y)**(self.p-2) * _np.outer(y, y)
         return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.outer(y, y)
+    
     def laplace(self, x, y):
         if x.ndim == 0:
             self.p*(self.p-1)*(self.c + x.T * y)**(self.p-2) * _np.linalg.norm(y)**2
         return self.p*(self.p-1)*(self.c + x.T @ y)**(self.p-2) * _np.linalg.norm(y)**2
+    
     def __repr__(self):
-        return 'Polynomial kernel with degree p = %f and inhomogeneity c = %f.' % (self.p, self.c)
+        return f'Polynomial kernel with degree p = {self.p} and inhomogeneity c = {self.c}.'
 
 
 class periodicKernel1D(object):
@@ -101,7 +121,7 @@ class periodicKernel1D(object):
         return s
     
     def __repr__(self):
-        return 'One-dimensional periodic kernel with frequency p = %f and bandwidth sigma = %f.' % (self.p, self.sigma)
+        return f'One-dimensional periodic kernel with frequency p = {self.p} and bandwidth sigma = {self.sigma}.'
 
 
 class stringKernel(object):
@@ -198,14 +218,13 @@ class productKernel(object):
 
 def gramian(X, k):
     '''Compute Gram matrix for training data X with kernel k.'''
-    name = k.__class__.__name__
-    if name == 'gaussianKernel':
+    if type(k) is gaussianKernel:
         return _np.exp(-distance.squareform(distance.pdist(X.T, 'sqeuclidean'))/(2*k.sigma**2))
-    elif name == 'laplacianKernel':
+    elif type(k) is laplacianKernel:
         return _np.exp(-distance.squareform(distance.pdist(X.T, 'euclidean'))/k.sigma)
-    elif name == 'polynomialKernel':
+    elif type(k) is polynomialKernel:
         return (k.c + X.T @ X)**k.p
-    elif name == 'stringKernel':
+    elif type(k) is stringKernel:
         n = len(X)
         # compute weights for normalization
         d = _np.zeros(n)
@@ -219,6 +238,8 @@ def gramian(X, k):
                 G[j, i] = G[i, j]
         return G
     else:
+        print('User-defined kernel')
+        
         if isinstance(X, list): # e.g., for strings
             n = len(X)
             G = _np.zeros([n, n])
@@ -238,14 +259,13 @@ def gramian(X, k):
 
 def gramian2(X, Y, k):
     '''Compute Gram matrix for training data X and Y with kernel k.'''
-    name = k.__class__.__name__
-    if name == 'gaussianKernel':
+    if type(k) is gaussianKernel:
         return _np.exp(-distance.cdist(X.T, Y.T, 'sqeuclidean')/(2*k.sigma**2))
-    elif name == 'laplacianKernel':
+    elif type(k) is laplacianKernel:
         return _np.exp(-distance.cdist(X.T, Y.T, 'euclidean')/k.sigma)
-    elif name == 'polynomialKernel':
+    elif type(k) is polynomialKernel:
         return (k.c + X.T@Y)**k.p
-    elif name == 'stringKernel':
+    elif type(k) is stringKernel:
         m = len(X)
         n = len(Y)
         dx = _np.zeros((m,))
@@ -278,31 +298,29 @@ def gramian2(X, Y, k):
         return G
 
 
-class densityEstimate(object):
+class kde(object):
     '''Kernel density estimation using the Gaussian kernel.'''
-    def __init__(self, X, k, beta=1):
-        if k.__class__.__name__ != 'gaussianKernel':
+    def __init__(self, X, k):
+        if type(k) is not gaussianKernel:
             print('Error: Only implemented for Gaussian kernel.')
             return
         self.X = X                                       # points for density estimation
         self.k = k                                       # kernel
         self.d, self.n = X.shape                         # dimension and number of data points
         self.c = 1/_np.sqrt(2*_np.pi*k.sigma**2)**self.d # normalization constant
-        self.beta = beta                                 # inverse temperature, for MD applications
       
-    def rho(self, x):
-        G2 = gramian2(x, self.X, self.k)
-        return self.c/self.n * G2.sum(axis=1, keepdims=True).T
-    
-    def V(self, x):
-        return -_np.log(self.rho(x))/self.beta
-    
-    def gradV(self, x):
-        G2 = gramian2(x, self.X, self.k)
-        m = x.shape[1]
-        y = _np.zeros_like(x)
-        for i in range(m):
-            for j in range(self.n):
-                y[:, i] = y[:, i] + (x[:, i] - self.X[:, j])*G2[i, j]
-            y[:, i] =  1/(self.beta*self.rho(x[:, i, None])) * self.c/(self.n * self.k.sigma**2)*y[:, i]
-        return y
+    def __call__(self, x):
+        if self.d == 1 and _np.isscalar(x):
+            x = _np.array([[x]]) # convert scalar to matrix
+        elif x.ndim == 1:
+            x = x[:, _np.newaxis] # convert vector to matrix
+        
+        G2 = gramian2(self.X, x, self.k)
+        rho = self.c/self.n * G2.sum(axis=0, keepdims=True)
+        
+        if x.shape[1] == 1:
+            return rho[0, 0] # return scalar
+        return rho
+        
+    def __repr__(self):
+        return f'Kernel density estimation using Gaussian kernel with bandwidth {self.k.sigma}.'
