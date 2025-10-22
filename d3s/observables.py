@@ -2,13 +2,11 @@ import math
 import numpy as _np
 from scipy.spatial import distance
 
-
 def identity(x):
     '''
     Identity function.
     '''
     return x
-
 
 class monomials(object):
     '''
@@ -249,6 +247,30 @@ class voronoiOnSphere(object):
                 z.append(_np.cos(theta))
         return _np.array([x, y, z])
 
+try: # check if jax is installed
+    import jax
+    
+    class jaxBasis:
+        '''
+        Base class that adds automatic differentiation capabilities
+        to user-defined dictionaries.
+        
+        Based on Mohammad Tabish's code.
+        '''
+        def diff(self, x):
+            return jax.vmap(self._diff, in_axes=1, out_axes=2)(x)
+        
+        def ddiff(self, x):
+            return jax.vmap(self._ddiff, in_axes=1, out_axes=3)(x)
+
+        def _diff(self, x):
+            return jax.jacobian(self.__call__, argnums=0)(x)
+        
+        def _ddiff(self, x):
+            return jax.hessian(self.__call__, argnums=0)(x)
+
+except ImportError as e:
+    print(e)
 
 # auxiliary functions
 def nchoosek(n, k):
