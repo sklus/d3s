@@ -404,5 +404,21 @@ public:
     static const size_t d = 6;
 };
 
+//------------------------------------------------------------------------------
+// IPS
+//------------------------------------------------------------------------------
+class IPS : public SDE
+{
+public:
+    IPS(const size_t d, double h = 1e-3, size_t nSteps = 10000);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+
+    const size_t d;
+
+private:
+    double dU(double x);
+};
 
 #endif // D3S_SYSTEM_H

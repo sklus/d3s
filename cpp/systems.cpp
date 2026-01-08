@@ -712,9 +712,44 @@ size_t Helium::getDimension() const
 }
 
 //------------------------------------------------------------------------------
-// class export to python
+// IPS: simple interacting particle system, see arxiv.org/abs/2601.02932
 //------------------------------------------------------------------------------
+IPS::IPS(const size_t d, double h, size_t nSteps)
+    : SDE(d, h, nSteps),
+      d(d)
+{ }
 
+void IPS::f(Vector& x, Vector& y)
+{
+    for(size_t i = 0; i < d; ++i)
+    {
+        y[i] = 0;
+        for(size_t j = 0; j < d; ++j)
+            y[i] -= 1.0/d*dU(x[i] - x[j]);
+    }
+}
+
+void IPS::getSigma(Matrix& sigma)
+{
+    for (size_t i = 0; i < d; ++i)
+        for (size_t j = 0; j < d; ++j)
+            sigma[i][j] = (i == j ? 0.4 : 0.0);
+}
+
+size_t IPS::getDimension() const
+{
+    return d;
+}
+
+double IPS::dU(double x)
+{
+    const double a = 0.25;
+    return sin(x) + 4.0*a*sin(4*x); // interaction term
+}
+
+//------------------------------------------------------------------------------
+// class export to Python
+//------------------------------------------------------------------------------
 #define S(x) #x
 #define EXPORT_DISC(name)                               \
     py::class_<name>(m, S(name))                        \
@@ -725,6 +760,12 @@ size_t Helium::getDimension() const
 #define EXPORT_CONT(name)                               \
     py::class_<name>(m, S(name))                        \
         .def(py::init<double, size_t>())                \
+        .def("getDimension", &name::getDimension)       \
+        .def("__call__", &name::operator())             \
+        .def("getTrajectory", &name::getTrajectory);
+#define EXPORT_IPS(name)                                \
+    py::class_<name>(m, S(name))                        \
+        .def(py::init<size_t, double, size_t>())        \
         .def("getDimension", &name::getDimension)       \
         .def("__call__", &name::operator())             \
         .def("getTrajectory", &name::getTrajectory);
@@ -751,4 +792,5 @@ PYBIND11_MODULE(systems, m)
     EXPORT_CONT(PoeschlTeller);
     EXPORT_CONT(Hydrogen);
     EXPORT_CONT(Helium);
+    EXPORT_IPS(IPS);
 }

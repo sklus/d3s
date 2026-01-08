@@ -152,7 +152,7 @@ plt.title('reconstructed w')
 
 #%% sample graph from graphon
 n_v = 200
-x_A, A = g.sampleGraph(n_v, makeSymmetric=False)
+x_A, A = g.sampleGraph(n_v, makeSymmetric=True)
 
 plt.figure(12)
 plt.clf()
