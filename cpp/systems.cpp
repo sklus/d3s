@@ -312,6 +312,32 @@ size_t TripleWell1D::getDimension() const
 }
 
 //------------------------------------------------------------------------------
+// Potential with one deep well and four shallower wells, use interval [-5, 5]
+//------------------------------------------------------------------------------
+QuintupleWell1D::QuintupleWell1D(double h, size_t nSteps)
+    : SDE(d, h, nSteps)
+{}
+
+void QuintupleWell1D::f(Vector& x, Vector& y)
+{
+    y[0] = - x[0]
+            + 3*std::exp(-5*std::pow(-1.5 + x[0], 2))*(-15 + 10*x[0])
+            + 3*std::exp(-5*std::pow(1.5 + x[0], 2))*(15 + 10*x[0])
+            + 4*std::exp(-5*std::pow(-3 + x[0], 2))*(-30 + 10*x[0])
+            + 4*std::exp(-5*std::pow(3 + x[0], 2))*(30 + 10*x[0]);
+}
+
+void QuintupleWell1D::getSigma(Matrix& sigma)
+{
+    sigma[0][0] = 0.8;
+}
+
+size_t QuintupleWell1D::getDimension() const
+{
+    return d;
+}
+
+//------------------------------------------------------------------------------
 // Double well problem
 //------------------------------------------------------------------------------
 DoubleWell2D::DoubleWell2D(double h, size_t nSteps)
@@ -778,6 +804,7 @@ PYBIND11_MODULE(systems, m)
     EXPORT_CONT(ChuaCircuit);
     EXPORT_CONT(OrnsteinUhlenbeck);
     EXPORT_CONT(TripleWell1D);
+    EXPORT_CONT(QuintupleWell1D);
     EXPORT_CONT(DoubleWell2D);
     EXPORT_CONT(QuadrupleWell2D);
     EXPORT_CONT(QuadrupleWellUnsymmetric2D);

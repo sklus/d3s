@@ -204,6 +204,20 @@ public:
 };
 
 //------------------------------------------------------------------------------
+// Potential with one deep well and four shallower wells, use interval [-5, 5]
+//------------------------------------------------------------------------------
+class QuintupleWell1D : public SDE
+{
+public:
+    QuintupleWell1D(double h = 1e-3, size_t nSteps = 500);
+    void f(Vector& x, Vector& y);
+    void getSigma(Matrix& sigma);
+    size_t getDimension() const;
+
+    static const size_t d = 1;
+};
+
+//------------------------------------------------------------------------------
 // Double well problem
 //------------------------------------------------------------------------------
 class DoubleWell2D : public SDE
