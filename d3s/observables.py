@@ -1,5 +1,6 @@
 import math
 import numpy as _np
+import scipy as _sp
 from scipy.spatial import distance
 
 def identity(x):
@@ -271,6 +272,31 @@ try: # check if jax is installed
 
 except ImportError as e:
     print(e)
+
+
+class whitening(object):
+    '''
+    Whitening transformation of the basis functions psi w.r.t.
+    the data contained in X.
+    '''
+    def __init__(self, psi, X):
+        PsiX = psi(X)
+        m = X.shape[1]
+        C = 1/m * PsiX @ PsiX.T
+        d, V = _sp.linalg.eigh(C)
+        
+        self.psi = psi # original basis functions
+        self.T = _np.diag(1/_np.sqrt(d)) @ V.T # whitening transformation
+        
+    def __call__(self, x):
+        '''
+        Evaluates transformed basis functions in x.
+        '''
+        return self.T @ self.psi(x)
+    
+    def diff(self, x):
+        return _np.einsum('ij,jkl->ikl', self.T, self.psi.diff(x))
+
 
 # auxiliary functions
 def nchoosek(n, k):
