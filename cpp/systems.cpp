@@ -459,8 +459,8 @@ void Himmelblau::f(Vector& x, Vector& y)
 
 void Himmelblau::getSigma(Matrix& sigma)
 {
-    sigma[0][0] = std::sqrt(20); sigma[0][1] = 0.0;
-    sigma[1][0] = 0.0; sigma[1][1] = std::sqrt(20);
+    sigma[0][0] = std::sqrt(100); sigma[0][1] = 0.0;
+    sigma[1][0] = 0.0; sigma[1][1] = std::sqrt(100);
 }
 
 size_t Himmelblau::getDimension() const
