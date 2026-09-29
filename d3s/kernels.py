@@ -302,7 +302,7 @@ class kde(object):
     '''Kernel density estimation using the Gaussian kernel.'''
     def __init__(self, X, k):
         if type(k) is not gaussianKernel:
-            print('Error: Only implemented for Gaussian kernel.')
+            print('Error: Only implemented for the Gaussian kernel.')
             return
         self.X = X                                       # points for density estimation
         self.k = k                                       # kernel

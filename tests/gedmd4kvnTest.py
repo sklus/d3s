@@ -32,14 +32,14 @@ def uniformInEllipse(a, b, c, r):
     return V @ (p/np.sqrt(d))
 
 class myBasis(observables.jaxBasis):
+    '''
+    Generates basis functions of the form
+        (1 - a*x_1^2 - b*x_1*x_2 - c*x_2^2) * x_1^{i-j} * x_2^j.
+
+    a, b, c: coefficients of the quadratic equation describing the ellipse
+    k: order of monomials
+    '''
     def __init__(self, a, b, c, k):
-        '''
-        Generates basis functions of the form
-            (1 - a*x_1^2 - b*x_1*x_2 - c*x_2^2) * x_1^{i-j} * x_2^j.
-        
-        a, b, c: coefficients of the quadratic equation describing the ellipse
-        k: order of monomials
-        '''
         self.a = a
         self.b = b
         self.c = c
